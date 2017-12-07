@@ -269,7 +269,7 @@ public class DataTypeTextTest extends DataTypeTestBase {
         .createQuery("SELECT '1981-05-30'::DATE")
         .execute(ctx.asyncAssertSuccess(result ->{
           ctx.assertEquals(1, result.size());
-          ctx.assertEquals(LocalDate.parse("1981-05-30"), result.iterator().next().getTemporal(0));
+          ctx.assertEquals(LocalDate.parse("1981-05-30"), result.iterator().next().getLocalDate(0));
           async.complete();
         }));
     }));
@@ -284,7 +284,7 @@ public class DataTypeTextTest extends DataTypeTestBase {
         .createQuery("SELECT '17:55:04.905120'::TIME")
         .execute(ctx.asyncAssertSuccess(result ->{
           ctx.assertEquals(1, result.size());
-          ctx.assertEquals(LocalTime.parse("17:55:04.905120"), result.iterator().next().getTemporal(0));
+          ctx.assertEquals(LocalTime.parse("17:55:04.905120"), result.iterator().next().getLocalTime(0));
           async.complete();
         }));
     }));
@@ -299,7 +299,7 @@ public class DataTypeTextTest extends DataTypeTestBase {
         .createQuery("SELECT '17:55:04.90512+03:07'::TIMETZ")
         .execute(ctx.asyncAssertSuccess(result ->{
           ctx.assertEquals(1, result.size());
-          ctx.assertEquals(OffsetTime.parse("17:55:04.905120+03:07"), result.iterator().next().getTemporal(0));
+          ctx.assertEquals(OffsetTime.parse("17:55:04.905120+03:07"), result.iterator().next().getOffsetTime(0));
           async.complete();
         }));
     }));
@@ -314,7 +314,7 @@ public class DataTypeTextTest extends DataTypeTestBase {
         .createQuery("SELECT '2017-05-14 19:35:58.237666'::TIMESTAMP")
         .execute(ctx.asyncAssertSuccess(result ->{
           ctx.assertEquals(1, result.size());
-          ctx.assertEquals(LocalDateTime.parse("2017-05-14T19:35:58.237666"), result.iterator().next().getTemporal(0));
+          ctx.assertEquals(LocalDateTime.parse("2017-05-14T19:35:58.237666"), result.iterator().next().getLocalDateTime(0));
           async.complete();
         }));
     }));
@@ -329,7 +329,7 @@ public class DataTypeTextTest extends DataTypeTestBase {
         conn.createQuery("SELECT '2017-05-14 22:35:58.237666-03'::TIMESTAMPTZ").execute(
           ctx.asyncAssertSuccess(result -> {
             ctx.assertEquals(1, result.size());
-            ctx.assertEquals(OffsetDateTime.parse("2017-05-15T01:35:58.237666Z"), result.iterator().next().getTemporal(0));
+            ctx.assertEquals(OffsetDateTime.parse("2017-05-15T01:35:58.237666Z"), result.iterator().next().getOffsetDateTime(0));
             async.complete();
           }));
       }));
