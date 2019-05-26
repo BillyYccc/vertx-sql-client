@@ -184,6 +184,27 @@ class ExtendedQueryCommandCodec<R> extends QueryCommandBaseCodec<R, ExtendedQuer
     encoder.chctx.writeAndFlush(packet);
   }
 
+  private void sendStatementLongData(long statementId, int paramId, Object param) {
+    //TODO we need to decide when to send a long data(make the param size tunable?)
+    ByteBuf packet = allocateBuffer();
+    // encode packet header
+    int packetStartIdx = packet.writerIndex();
+    packet.writeMediumLE(0); // will set payload length later by calculation
+    packet.writeByte(sequenceId++);
+
+    // encode packet payload
+    packet.writeByte(CommandType.COM_STMT_SEND_LONG_DATA);
+    packet.writeIntLE((int) statementId);
+    packet.writeShortLE(paramId);
+    DataTypeCodec.encodeBinary(parseDataTypeByEncodingValue(param), param, packet);
+
+    // set payload length
+    int lenOfPayload = packet.writerIndex() - packetStartIdx - 4;
+    packet.setMediumLE(packetStartIdx, lenOfPayload);
+
+    encoder.chctx.writeAndFlush(packet);
+  }
+
   @Override
   protected void handleInitPacket(ByteBuf payload) {
     // may receive ERR_Packet, OK_Packet, Binary Protocol Resultset
