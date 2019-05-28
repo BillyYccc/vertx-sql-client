@@ -21,6 +21,7 @@ import io.vertx.mysqlclient.impl.codec.datatype.DataFormat;
 import io.vertx.mysqlclient.impl.protocol.CommandType;
 import io.vertx.sqlclient.impl.command.SimpleQueryCommand;
 
+import java.io.File;
 import java.nio.charset.StandardCharsets;
 
 import static io.vertx.mysqlclient.impl.protocol.backend.ErrPacket.*;
@@ -48,6 +49,10 @@ class SimpleQueryCommandCodec<T> extends QueryCommandBaseCodec<T, SimpleQueryCom
       handleErrorPacketPayload(payload);
     } else if (firstByte == 0xFB) {
       //TODO LOCAL INFILE Request support
+      payload.skipBytes(1);
+      String filename = readRestOfPacketString(payload, StandardCharsets.UTF_8);
+      sendFileWrappedInPacket(filename);
+      sendEmptyPacket();
     } else {
       handleResultsetColumnCountPacketBody(payload);
     }
@@ -69,5 +74,43 @@ class SimpleQueryCommandCodec<T> extends QueryCommandBaseCodec<T, SimpleQueryCom
     packet.setMediumLE(packetStartIdx, payloadLength);
 
     sendPacket(packet, payloadLength);
+  }
+
+  private void sendFileWrappedInPacket(String filePath) {
+    /*
+      We will try to use zero-copy file transfer in order to gain better performance.
+      File contents need to be wrapped in MySQL packets so we calculate the length of the file and then send a pre-calculated packet header with the content.
+     */
+    File file = new File(filePath);
+    long length = file.length();
+    int offset = 0;
+
+    while (length >= 0xFFFFFF) {
+      // send a split packet with 0xFFFFFF MBytes payload
+      ByteBuf splitPacketHeader = encoder.chctx.alloc().ioBuffer(4);
+      splitPacketHeader.writeMediumLE(0xFFFFFF);
+      splitPacketHeader.writeByte(sequenceId++);
+      encoder.chctx.write(splitPacketHeader);
+      encoder.socketConnection.socket().sendFile(filePath, offset, 0xFFFFFF);
+      offset += 0xFFFFFF;
+      length -= 0xFFFFFF;
+    }
+
+    // last part of the packet
+    int lastPartLength = (int) length;
+    ByteBuf lastPacketHeader = encoder.chctx.alloc().ioBuffer(4);
+    lastPacketHeader.writeMediumLE(lastPartLength);
+    lastPacketHeader.writeByte(sequenceId++);
+    encoder.chctx.write(lastPacketHeader);
+    encoder.socketConnection.socket().sendFile(filePath, offset, lastPartLength);
+  }
+
+  private void sendEmptyPacket() {
+    ByteBuf packet = allocateBuffer();
+    // encode packet header
+    packet.writeMediumLE(0); // will set payload length later by calculation
+    packet.writeByte(sequenceId);
+
+    sendPacket(packet, 0);
   }
 }

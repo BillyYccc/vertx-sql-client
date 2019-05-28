@@ -3,6 +3,7 @@ package io.vertx.mysqlclient.impl.codec;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOutboundHandlerAdapter;
 import io.netty.channel.ChannelPromise;
+import io.vertx.mysqlclient.impl.MySQLSocketConnection;
 import io.vertx.sqlclient.impl.command.*;
 
 import java.util.ArrayDeque;
@@ -13,11 +14,13 @@ class MySQLEncoder extends ChannelOutboundHandlerAdapter {
 
   private final ArrayDeque<CommandCodec<?, ?>> inflight;
   ChannelHandlerContext chctx;
+  MySQLSocketConnection socketConnection;
 
   int clientCapabilitiesFlag = 0x00000000;
 
-  MySQLEncoder(ArrayDeque<CommandCodec<?, ?>> inflight) {
+  MySQLEncoder(ArrayDeque<CommandCodec<?, ?>> inflight, MySQLSocketConnection socketConnection) {
     this.inflight = inflight;
+    this.socketConnection = socketConnection;
     initSupportedCapabilitiesFlags();
   }
 
@@ -78,5 +81,6 @@ class MySQLEncoder extends ChannelOutboundHandlerAdapter {
     clientCapabilitiesFlag |= CLIENT_MULTI_STATEMENTS;
     clientCapabilitiesFlag |= CLIENT_MULTI_RESULTS;
     clientCapabilitiesFlag |= CLIENT_SESSION_TRACK;
+    clientCapabilitiesFlag |= CLIENT_LOCAL_FILES;
   }
 }
