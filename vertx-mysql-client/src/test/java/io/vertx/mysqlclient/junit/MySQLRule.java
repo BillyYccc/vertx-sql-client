@@ -205,7 +205,7 @@ public class MySQLRule extends ExternalResource {
     }
   }
 
-  private enum DatabaseType {
+  public enum DatabaseType {
     MySQL, MariaDB;
 
     public String toDockerImageName() {
