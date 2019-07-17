@@ -2,7 +2,6 @@ package io.vertx.mysqlclient.impl.codec;
 
 import io.netty.util.collection.IntObjectHashMap;
 import io.netty.util.collection.IntObjectMap;
-import io.vertx.core.buffer.Buffer;
 import io.vertx.sqlclient.data.Numeric;
 
 import java.time.Duration;
@@ -18,12 +17,11 @@ public enum DataType {
   DOUBLE(ColumnDefinition.ColumnType.MYSQL_TYPE_DOUBLE, Double.class, Double.class),
   FLOAT(ColumnDefinition.ColumnType.MYSQL_TYPE_FLOAT, Float.class, Float.class),
   NUMERIC(ColumnDefinition.ColumnType.MYSQL_TYPE_NEWDECIMAL, Numeric.class, Numeric.class), // DECIMAL
-  STRING(ColumnDefinition.ColumnType.MYSQL_TYPE_STRING, Buffer.class, String.class), // CHAR, BINARY
-  VARSTRING(ColumnDefinition.ColumnType.MYSQL_TYPE_VAR_STRING, Buffer.class, String.class), //VARCHAR, VARBINARY
-  TINYBLOB(ColumnDefinition.ColumnType.MYSQL_TYPE_TINY_BLOB, Buffer.class, String.class),
-  BLOB(ColumnDefinition.ColumnType.MYSQL_TYPE_BLOB, Buffer.class, String.class),
-  MEDIUMBLOB(ColumnDefinition.ColumnType.MYSQL_TYPE_MEDIUM_BLOB, Buffer.class, String.class),
-  LONGBLOB(ColumnDefinition.ColumnType.MYSQL_TYPE_LONG_BLOB, Buffer.class, String.class),
+  STRING(ColumnDefinition.ColumnType.MYSQL_TYPE_STRING, byte[].class, String.class), // CHAR, BINARY
+  VARSTRING(ColumnDefinition.ColumnType.MYSQL_TYPE_VAR_STRING, byte[].class, String.class), //VARCHAR, VARBINARY
+  TINYBLOB(ColumnDefinition.ColumnType.MYSQL_TYPE_TINY_BLOB, byte[].class, String.class),
+  BLOB(ColumnDefinition.ColumnType.MYSQL_TYPE_BLOB, byte[].class, String.class),
+  LONGBLOB(ColumnDefinition.ColumnType.MYSQL_TYPE_LONG_BLOB, byte[].class, String.class),
   DATE(ColumnDefinition.ColumnType.MYSQL_TYPE_DATE, LocalDate.class, LocalDate.class),
   TIME(ColumnDefinition.ColumnType.MYSQL_TYPE_TIME, Duration.class, Duration.class),
   DATETIME(ColumnDefinition.ColumnType.MYSQL_TYPE_DATETIME, LocalDateTime.class, LocalDateTime.class),

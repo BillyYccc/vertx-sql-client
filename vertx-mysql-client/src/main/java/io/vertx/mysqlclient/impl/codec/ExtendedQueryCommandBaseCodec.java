@@ -1,7 +1,6 @@
 package io.vertx.mysqlclient.impl.codec;
 
 import io.netty.buffer.ByteBuf;
-import io.vertx.core.buffer.Buffer;
 import io.vertx.mysqlclient.impl.MySQLCollation;
 import io.vertx.sqlclient.Tuple;
 import io.vertx.sqlclient.impl.command.ExtendedQueryCommandBase;
@@ -124,7 +123,7 @@ abstract class ExtendedQueryCommandBaseCodec<R, C extends ExtendedQueryCommandBa
     } else if (value instanceof Duration) {
       // ProtocolBinary::MYSQL_TYPE_TIME
       return DataType.TIME;
-    } else if (value instanceof Buffer) {
+    } else if (value instanceof byte[]) {
       // ProtocolBinary::MYSQL_TYPE_LONG_BLOB, ProtocolBinary::MYSQL_TYPE_MEDIUM_BLOB, ProtocolBinary::MYSQL_TYPE_BLOB, ProtocolBinary::MYSQL_TYPE_TINY_BLOB
       return DataType.BLOB;
     } else if (value instanceof LocalDateTime) {

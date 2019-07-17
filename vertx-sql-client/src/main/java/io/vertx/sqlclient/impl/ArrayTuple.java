@@ -18,7 +18,6 @@
 package io.vertx.sqlclient.impl;
 
 import io.vertx.sqlclient.Tuple;
-import io.vertx.core.buffer.Buffer;
 
 import java.math.BigDecimal;
 import java.time.*;
@@ -250,10 +249,10 @@ public class ArrayTuple extends ArrayList<Object> implements Tuple {
   }
 
   @Override
-  public Buffer[] getBufferArray(int pos) {
+  public byte[][] getBufferArray(int pos) {
     Object val = get(pos);
-    if (val instanceof Buffer[]) {
-      return (Buffer[]) val;
+    if (val instanceof byte[][]) {
+      return (byte[][]) val;
     } else {
       return null;
     }
@@ -279,10 +278,10 @@ public class ArrayTuple extends ArrayList<Object> implements Tuple {
   }
 
   @Override
-  public Buffer getBuffer(int pos) {
+  public byte[] getBuffer(int pos) {
     Object val = get(pos);
-    if (val instanceof Buffer) {
-      return (Buffer) val;
+    if (val instanceof byte[]) {
+      return (byte[]) val;
     }
     return null;
   }
@@ -399,7 +398,7 @@ public class ArrayTuple extends ArrayList<Object> implements Tuple {
   }
 
   @Override
-  public Tuple addBuffer(Buffer value) {
+  public Tuple addBuffer(byte[] value) {
     add(value);
     return this;
   }
@@ -525,7 +524,7 @@ public class ArrayTuple extends ArrayList<Object> implements Tuple {
   }
 
   @Override
-  public Tuple addBufferArray(Buffer[] value) {
+  public Tuple addBufferArray(byte[][] value) {
     add(value);
     return this;
   }

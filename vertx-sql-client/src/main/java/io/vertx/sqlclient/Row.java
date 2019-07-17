@@ -18,7 +18,6 @@ package io.vertx.sqlclient;
 
 import io.vertx.codegen.annotations.GenIgnore;
 import io.vertx.codegen.annotations.VertxGen;
-import io.vertx.core.buffer.Buffer;
 
 import java.math.BigDecimal;
 import java.time.*;
@@ -114,7 +113,7 @@ public interface Row extends Tuple {
    * @param name the column
    * @return the value or {@code null}
    */
-  Buffer getBuffer(String name);
+  byte[] getBuffer(String name);
 
   /**
    * Get a temporal value at {@code pos}.
@@ -297,13 +296,13 @@ public interface Row extends Tuple {
   OffsetDateTime[] getOffsetDateTimeArray(String name);
 
   /**
-   * Get an array of {@link Buffer} value at {@code pos}.
+   * Get an array of {@code byte[]} value at {@code pos}.
    *
    * @param name the column
    * @return the value or {@code null}
    */
   @GenIgnore
-  Buffer[] getBufferArray(String name);
+  byte[][] getBufferArray(String name);
 
   /**
    * Get an array of {@link UUID} value at {@code pos}.

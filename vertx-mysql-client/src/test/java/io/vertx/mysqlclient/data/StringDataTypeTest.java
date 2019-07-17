@@ -1,12 +1,14 @@
 package io.vertx.mysqlclient.data;
 
-import io.vertx.mysqlclient.MySQLConnection;
-import io.vertx.sqlclient.Row;
-import io.vertx.core.buffer.Buffer;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
+import io.vertx.mysqlclient.MySQLConnection;
+import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.Tuple;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import java.util.Arrays;
 
 @RunWith(VertxUnitRunner.class)
 public class StringDataTypeTest extends MySQLDataTypeTestBase {
@@ -17,12 +19,12 @@ public class StringDataTypeTest extends MySQLDataTypeTestBase {
         ctx.assertEquals(1, result.size());
         Row row = result.iterator().next();
         ctx.assertEquals(1, row.getValue(0));
-        ctx.assertEquals(Buffer.buffer("HELLO"), row.getValue(1));
-        ctx.assertEquals(Buffer.buffer("HELLO, WORLD"), row.getValue(2));
-        ctx.assertEquals(Buffer.buffer("TINYBLOB"), row.getValue(3));
-        ctx.assertEquals(Buffer.buffer("BLOB"), row.getValue(4));
-        ctx.assertEquals(Buffer.buffer("MEDIUMBLOB"), row.getValue(5));
-        ctx.assertEquals(Buffer.buffer("LONGBLOB"), row.getValue(6));
+        ctx.assertTrue(Arrays.equals("HELLO".getBytes(), row.getBuffer(1)));
+        ctx.assertTrue(Arrays.equals("HELLO, WORLD".getBytes(), row.getBuffer(2)));
+        ctx.assertTrue(Arrays.equals("TINYBLOB".getBytes(), row.getBuffer(3)));
+        ctx.assertTrue(Arrays.equals("BLOB".getBytes(), row.getBuffer(4)));
+        ctx.assertTrue(Arrays.equals("MEDIUMBLOB".getBytes(), row.getBuffer(5)));
+        ctx.assertTrue(Arrays.equals("LONGBLOB".getBytes(), row.getBuffer(6)));
         ctx.assertEquals("TINYTEXT", row.getValue(7));
         ctx.assertEquals("TEXT", row.getValue(8));
         ctx.assertEquals("MEDIUMTEXT", row.getValue(9));
@@ -34,92 +36,92 @@ public class StringDataTypeTest extends MySQLDataTypeTestBase {
 
   @Test
   public void testTextDecodeBinary(TestContext ctx) {
-    testTextDecodeGenericWithTable(ctx, "Binary", Buffer.buffer("HELLO"));
+    testTextDecodeBinaryWithTable(ctx, "Binary", ("HELLO").getBytes());
   }
 
   @Test
   public void testBinaryDecodeBinary(TestContext ctx) {
-    testBinaryDecodeGenericWithTable(ctx, "Binary", Buffer.buffer("HELLO"));
+    testBinaryDecodeBinaryWithTable(ctx, "Binary", ("HELLO").getBytes());
   }
 
   @Test
   public void testBinaryEncodeBinary(TestContext ctx) {
-    testBinaryEncodeGeneric(ctx, "Binary", Buffer.buffer("HELLO"));
+    testBinaryEncodeBinary(ctx, "Binary", ("HELLO").getBytes());
   }
 
   @Test
   public void testBinaryEncodeVarBinary(TestContext ctx) {
-    testBinaryEncodeGeneric(ctx, "VarBinary", Buffer.buffer("HELLO, WORLD"));
+    testBinaryEncodeBinary(ctx, "VarBinary", ("HELLO, WORLD").getBytes());
   }
 
   @Test
   public void testTextDecodeVarBinary(TestContext ctx) {
-    testTextDecodeGenericWithTable(ctx, "VarBinary", Buffer.buffer("HELLO, WORLD"));
+    testTextDecodeBinaryWithTable(ctx, "VarBinary", ("HELLO, WORLD").getBytes());
   }
 
   @Test
   public void testBinaryDecodeVarBinary(TestContext ctx) {
-    testBinaryDecodeGenericWithTable(ctx, "VarBinary", Buffer.buffer("HELLO, WORLD"));
+    testBinaryDecodeBinaryWithTable(ctx, "VarBinary", ("HELLO, WORLD").getBytes());
   }
 
   @Test
   public void testBinaryEncodeTinyBlob(TestContext ctx) {
-    testBinaryEncodeGeneric(ctx, "TinyBlob", Buffer.buffer("TINYBLOB"));
+    testBinaryEncodeBinary(ctx, "TinyBlob", "TINYBLOB".getBytes());
   }
 
   @Test
   public void testTextDecodeTinyBlob(TestContext ctx) {
-    testTextDecodeGenericWithTable(ctx, "TinyBlob", Buffer.buffer("TINYBLOB"));
+    testTextDecodeBinaryWithTable(ctx, "TinyBlob", "TINYBLOB".getBytes());
   }
 
   @Test
   public void testBinaryDecodeTinyBlob(TestContext ctx) {
-    testBinaryDecodeGenericWithTable(ctx, "TinyBlob", Buffer.buffer("TINYBLOB"));
+    testBinaryDecodeBinaryWithTable(ctx, "TinyBlob", "TINYBLOB".getBytes());
   }
 
   @Test
   public void testBinaryEncodeBlob(TestContext ctx) {
-    testBinaryEncodeGeneric(ctx, "Blob", Buffer.buffer("BLOB"));
+    testBinaryEncodeBinary(ctx, "Blob", "BLOB".getBytes());
   }
 
   @Test
   public void testTextDecodeBlob(TestContext ctx) {
-    testTextDecodeGenericWithTable(ctx, "Blob", Buffer.buffer("BLOB"));
+    testTextDecodeBinaryWithTable(ctx, "Blob", "BLOB".getBytes());
   }
 
   @Test
   public void testBinaryDecodeBlob(TestContext ctx) {
-    testBinaryDecodeGenericWithTable(ctx, "Blob", Buffer.buffer("BLOB"));
+    testBinaryDecodeBinaryWithTable(ctx, "Blob", "BLOB".getBytes());
   }
 
   @Test
   public void testBinaryEncodeMediumBlob(TestContext ctx) {
-    testBinaryEncodeGeneric(ctx, "MediumBlob", Buffer.buffer("MEDIUMBLOB"));
+    testBinaryEncodeBinary(ctx, "MediumBlob", "MEDIUMBLOB".getBytes());
   }
 
   @Test
   public void testTextDecodeMediumBlob(TestContext ctx) {
-    testTextDecodeGenericWithTable(ctx, "MediumBlob", Buffer.buffer("MEDIUMBLOB"));
+    testTextDecodeBinaryWithTable(ctx, "MediumBlob", "MEDIUMBLOB".getBytes());
   }
 
   @Test
   public void testBinaryDecodeMediumBlob(TestContext ctx) {
-    testBinaryDecodeGenericWithTable(ctx, "MediumBlob", Buffer.buffer("MEDIUMBLOB"));
+    testBinaryDecodeBinaryWithTable(ctx, "MediumBlob", "MEDIUMBLOB".getBytes());
   }
 
   @Test
   public void testBinaryEncodeLongBlob(TestContext ctx) {
-    testBinaryEncodeGeneric(ctx, "LongBlob", Buffer.buffer("LONGBLOB"));
+    testBinaryEncodeBinary(ctx, "LongBlob", "LONGBLOB".getBytes());
   }
 
   @Test
   public void testTextDecodeLongBlob(TestContext ctx) {
-    testTextDecodeGenericWithTable(ctx, "LongBlob", Buffer.buffer("LONGBLOB"));
+    testTextDecodeBinaryWithTable(ctx, "LongBlob", "LONGBLOB".getBytes());
   }
 
   @Test
   public void testBinaryDecodeLongBlob(TestContext ctx) {
-    testBinaryDecodeGenericWithTable(ctx, "LongBlob", Buffer.buffer("LONGBLOB"));
+    testBinaryDecodeBinaryWithTable(ctx, "LongBlob", "LONGBLOB".getBytes());
   }
 
   @Test
@@ -154,7 +156,7 @@ public class StringDataTypeTest extends MySQLDataTypeTestBase {
 
   @Test
   public void testBinaryEncodeMediumText(TestContext ctx) {
-    testBinaryEncodeGeneric(ctx, "MediumText", "MEDIUMTEXT");
+    testBinaryDecodeGenericWithTable(ctx, "MediumText", "MEDIUMTEXT");
   }
 
   @Test
@@ -180,5 +182,43 @@ public class StringDataTypeTest extends MySQLDataTypeTestBase {
   @Test
   public void testBinaryDecodeLongText(TestContext ctx) {
     testBinaryDecodeGenericWithTable(ctx, "LongText", "LONGTEXT");
+  }
+
+  private void testTextDecodeBinaryWithTable(TestContext ctx, String columnName, byte[] expected) {
+    MySQLConnection.connect(vertx, options, ctx.asyncAssertSuccess(conn -> {
+      conn.query("SELECT `" + columnName + "` FROM datatype WHERE id = 1", ctx.asyncAssertSuccess(result -> {
+        ctx.assertEquals(1, result.size());
+        Row row = result.iterator().next();
+        ctx.assertTrue(Arrays.equals(expected, row.getBuffer(0)));
+        ctx.assertTrue(Arrays.equals(expected, row.getBuffer(columnName)));
+        conn.close();
+      }));
+    }));
+  }
+
+  private void testBinaryDecodeBinaryWithTable(TestContext ctx, String columnName, byte[] expected) {
+    MySQLConnection.connect(vertx, options, ctx.asyncAssertSuccess(conn -> {
+      conn.preparedQuery("SELECT `" + columnName + "` FROM datatype WHERE id = 1", ctx.asyncAssertSuccess(result -> {
+        ctx.assertEquals(1, result.size());
+        Row row = result.iterator().next();
+        ctx.assertTrue(Arrays.equals(expected, row.getBuffer(0)));
+        ctx.assertTrue(Arrays.equals(expected, row.getBuffer(columnName)));
+        conn.close();
+      }));
+    }));
+  }
+
+  private void testBinaryEncodeBinary(TestContext ctx, String columnName, byte[] expected) {
+    MySQLConnection.connect(vertx, options, ctx.asyncAssertSuccess(conn -> {
+      conn.preparedQuery("UPDATE datatype SET `" + columnName + "` = ?" + " WHERE id = 2", Tuple.tuple().addValue(expected), ctx.asyncAssertSuccess(updateResult -> {
+        conn.preparedQuery("SELECT `" + columnName + "` FROM datatype WHERE id = 2", ctx.asyncAssertSuccess(result -> {
+          ctx.assertEquals(1, result.size());
+          Row row = result.iterator().next();
+          ctx.assertTrue(Arrays.equals(expected, row.getBuffer(0)));
+          ctx.assertTrue(Arrays.equals(expected, row.getBuffer(columnName)));
+          conn.close();
+        }));
+      }));
+    }));
   }
 }

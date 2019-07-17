@@ -3,7 +3,6 @@ package io.vertx.mysqlclient.impl.codec;
 import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.DecoderException;
 import io.vertx.mysqlclient.impl.util.BufferUtils;
-import io.vertx.core.buffer.Buffer;
 import io.vertx.sqlclient.data.Numeric;
 
 import java.nio.charset.Charset;
@@ -104,7 +103,7 @@ class DataTypeCodec {
         binaryEncodeNumeric(charset, (Numeric) value, buffer);
         break;
       case BLOB:
-        binaryEncodeBlob((Buffer) value, buffer);
+        binaryEncodeBlob((byte[]) value, buffer);
         break;
       case DATE:
         binaryEncodeDate((LocalDate) value, buffer);
@@ -202,9 +201,9 @@ class DataTypeCodec {
     BufferUtils.writeLengthEncodedString(buffer, value, charset);
   }
 
-  private static void binaryEncodeBlob(Buffer value, ByteBuf buffer) {
-    BufferUtils.writeLengthEncodedInteger(buffer, value.length());
-    buffer.writeBytes(value.getByteBuf());
+  private static void binaryEncodeBlob(byte[] value, ByteBuf buffer) {
+    BufferUtils.writeLengthEncodedInteger(buffer, value.length);
+    buffer.writeBytes(value);
   }
 
   private static void binaryEncodeDate(LocalDate value, ByteBuf buffer) {
@@ -335,11 +334,12 @@ class DataTypeCodec {
     }
   }
 
-  private static Buffer binaryDecodeBlob(ByteBuf buffer) {
+  private static byte[] binaryDecodeBlob(ByteBuf buffer) {
     int len = (int) BufferUtils.readLengthEncodedInteger(buffer);
-    ByteBuf copy = buffer.copy(buffer.readerIndex(), len);
+    byte[] result = new byte[len];
+    buffer.getBytes(buffer.readerIndex(), result);
     buffer.skipBytes(len);
-    return Buffer.buffer(copy);
+    return result;
   }
 
   private static String binaryDecodeText(Charset charset, ByteBuf buffer) {
@@ -449,8 +449,10 @@ class DataTypeCodec {
     }
   }
 
-  private static Buffer textDecodeBlob(ByteBuf buffer) {
-    return Buffer.buffer(buffer.copy());
+  private static byte[] textDecodeBlob(ByteBuf buffer) {
+    byte[] result = new byte[buffer.readableBytes()];
+    buffer.getBytes(buffer.readerIndex(), result);
+    return result;
   }
 
   private static String textDecodeText(Charset charset, ByteBuf buffer) {

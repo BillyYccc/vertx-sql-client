@@ -26,7 +26,6 @@ import io.vertx.sqlclient.Tuple;
 import io.vertx.sqlclient.data.Numeric;
 import io.vertx.pgclient.data.*;
 import io.vertx.pgclient.impl.util.UTF8StringEndDetector;
-import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -63,7 +62,7 @@ class DataTypeCodec {
   private static final OffsetTime[] empty_offset_time_array = new OffsetTime[0];
   private static final LocalDateTime[] empty_local_date_time_array = new LocalDateTime[0];
   private static final OffsetDateTime[] empty_offset_date_time_array = new OffsetDateTime[0];
-  private static final Buffer[] empty_buffer_array = new Buffer[0];
+  private static final byte[][] empty_buffer_array = new byte[0][0];
   private static final UUID[] empty_uuid_array = new UUID[0];
   private static final Object[] empty_json_array = new Object[0];
   private static final Numeric[] empty_numeric_array = new Numeric[0];
@@ -100,7 +99,7 @@ class DataTypeCodec {
   private static final IntFunction<OffsetTime[]> OFFSETTIME_ARRAY_FACTORY = size -> size == 0 ? empty_offset_time_array : new OffsetTime[size];
   private static final IntFunction<LocalDateTime[]> LOCALDATETIME_ARRAY_FACTORY = size -> size == 0 ? empty_local_date_time_array : new LocalDateTime[size];
   private static final IntFunction<OffsetDateTime[]> OFFSETDATETIME_ARRAY_FACTORY = size -> size == 0 ? empty_offset_date_time_array : new OffsetDateTime[size];
-  private static final IntFunction<Buffer[]> BUFFER_ARRAY_FACTORY =size -> size == 0 ? empty_buffer_array : new Buffer[size];
+  private static final IntFunction<byte[][]> BUFFER_ARRAY_FACTORY =size -> size == 0 ? empty_buffer_array : new byte[size][];
   private static final IntFunction<UUID[]> UUID_ARRAY_FACTORY = size -> size == 0 ? empty_uuid_array : new UUID[size];
   private static final IntFunction<Object[]> JSON_ARRAY_FACTORY = size -> size == 0 ? empty_json_array : new Object[size];
   private static final IntFunction<Numeric[]> NUMERIC_ARRAY_FACTORY = size -> size == 0 ? empty_numeric_array : new Numeric[size];
@@ -256,10 +255,10 @@ class DataTypeCodec {
         binaryEncodeArray((OffsetDateTime[]) value, DataType.TIMESTAMPTZ, buff);
         break;
       case BYTEA:
-        binaryEncodeBYTEA((Buffer) value, buff);
+        binaryEncodeBYTEA((byte[]) value, buff);
         break;
       case BYTEA_ARRAY:
-        binaryEncodeArray((Buffer[]) value, DataType.BYTEA, buff);
+        binaryEncodeArray((byte[][]) value, DataType.BYTEA, buff);
         break;
       case UUID:
         binaryEncodeUUID((UUID) value, buff);
@@ -1035,7 +1034,7 @@ class DataTypeCodec {
     return OffsetDateTime.parse(cs, TIMESTAMPTZ_FORMAT);
   }
 
-  private static Buffer textDecodeBYTEA(int index, int len, ByteBuf buff) {
+  private static byte[] textDecodeBYTEA(int index, int len, ByteBuf buff) {
     if (isHexFormat(index, len, buff)) {
       // hex format
       // Shift 2 bytes: skip \x prolog
@@ -1046,13 +1045,14 @@ class DataTypeCodec {
     }
   }
 
-  private static void binaryEncodeBYTEA(Buffer value, ByteBuf buff) {
-    ByteBuf byteBuf = value.getByteBuf();
-    buff.writeBytes(byteBuf);
+  private static void binaryEncodeBYTEA(byte[] value, ByteBuf buff) {
+    buff.writeBytes(value);
   }
 
-  private static Buffer binaryDecodeBYTEA(int index, int len, ByteBuf buff) {
-    return Buffer.buffer(buff.copy(index, len));
+  private static byte[] binaryDecodeBYTEA(int index, int len, ByteBuf buff) {
+    byte[] result = new byte[len];
+    buff.getBytes(index, result);
+    return result;
   }
 
   private static void binaryEncodeUUID(UUID uuid, ByteBuf buff) {
@@ -1308,19 +1308,19 @@ class DataTypeCodec {
 
   /**
    * Decode the specified {@code buff} formatted as an hex string starting at the buffer readable index
-   * with the specified {@code length} to a {@link Buffer}.
+   * with the specified {@code length} to a {@code byte[]}.
    *
    * @param len the hex string length
    * @param buff the byte buff to read from
    * @return the decoded value as a Buffer
    */
-  private static Buffer decodeHexStringToBytes(int index, int len, ByteBuf buff) {
+  private static byte[] decodeHexStringToBytes(int index, int len, ByteBuf buff) {
     len = len >> 1;
-    Buffer buffer = Buffer.buffer(len);
+    byte[] buffer = new byte[len];
     for (int i = 0; i < len; i++) {
       byte b0 = decodeHexChar(buff.getByte(index++));
       byte b1 = decodeHexChar(buff.getByte(index++));
-      buffer.appendByte((byte) (b0 * 16 + b1));
+      buffer[i] = (byte) (b0 * 16 + b1);
     }
     return buffer;
   }
@@ -1333,8 +1333,8 @@ class DataTypeCodec {
     return len >= 2 && buff.getByte(index) == '\\' && buff.getByte(index + 1) == 'x';
   }
 
-  private static Buffer decodeEscapeByteaStringToBuffer(int index, int len, ByteBuf buff) {
-    Buffer buffer = Buffer.buffer();
+  private static byte[] decodeEscapeByteaStringToBuffer(int index, int len, ByteBuf buff) {
+    ByteBuf buffer = Unpooled.buffer();
 
     int pos = 0;
     while (pos < len) {
@@ -1343,7 +1343,7 @@ class DataTypeCodec {
       if (current == '\\') {
         if (pos + 2 <= len && buff.getByte(pos + index + 1) == '\\') {
           // check double backslashes
-          buffer.appendByte((byte) '\\');
+          buffer.writeByte((byte) '\\');
           pos += 2;
         } else if (pos + 4 <= len) {
           // a preceded backslash with three-digit octal value
@@ -1352,19 +1352,19 @@ class DataTypeCodec {
           int low = Character.digit(buff.getByte(pos + index + 3), 8);
           int escapedValue = high + medium + low;
 
-          buffer.appendByte((byte) escapedValue);
+          buffer.writeByte((byte) escapedValue);
           pos += 4;
         } else {
           throw new DecoderException("Decoding unexpected BYTEA escape format");
         }
       } else {
         // printable octets
-        buffer.appendByte(current);
+        buffer.writeByte(current);
         pos++;
       }
     }
 
-    return buffer;
+    return buffer.array();
   }
 
   private static <T> T[] binaryDecodeArray(IntFunction<T[]> supplier, DataType type, int index, int len, ByteBuf buff) {

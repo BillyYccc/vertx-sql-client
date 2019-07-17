@@ -1,7 +1,6 @@
 package io.vertx.mysqlclient;
 
 import io.vertx.core.Vertx;
-import io.vertx.core.buffer.Buffer;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.sqlclient.Row;
@@ -237,17 +236,16 @@ public class MySQLQueryTest extends MySQLTestBase {
     int dataSize = 20 * 1024 * 1024; // 20MB payload
     byte[] data = new byte[dataSize];
     ThreadLocalRandom.current().nextBytes(data);
-    Buffer buffer = Buffer.buffer(data);
-    ctx.assertTrue(buffer.length() > 0xFFFFFF);
+    ctx.assertTrue(data.length > 0xFFFFFF);
 
     MySQLConnection.connect(vertx, options, ctx.asyncAssertSuccess(conn -> {
-      conn.preparedQuery("UPDATE datatype SET `LongBlob` = ? WHERE id = 2", Tuple.of(buffer), ctx.asyncAssertSuccess(v -> {
+      conn.preparedQuery("UPDATE datatype SET `LongBlob` = ? WHERE id = 2", Tuple.tuple().addBuffer(data), ctx.asyncAssertSuccess(v -> {
         conn.preparedQuery("SELECT id, `LongBlob` FROM datatype WHERE id = 2", ctx.asyncAssertSuccess(rowSet -> {
           Row row = rowSet.iterator().next();
           ctx.assertEquals(2, row.getInteger(0));
           ctx.assertEquals(2, row.getInteger("id"));
-          ctx.assertEquals(buffer, row.getBuffer(1));
-          ctx.assertEquals(buffer, row.getBuffer("LongBlob"));
+          ctx.assertEquals(data, row.getBuffer(1));
+          ctx.assertEquals(data, row.getBuffer("LongBlob"));
           conn.close();
         }));
       }));

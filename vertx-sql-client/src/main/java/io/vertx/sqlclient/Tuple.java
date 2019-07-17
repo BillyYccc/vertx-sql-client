@@ -21,7 +21,6 @@ import io.vertx.sqlclient.impl.ArrayTuple;
 import io.vertx.codegen.annotations.Fluent;
 import io.vertx.codegen.annotations.GenIgnore;
 import io.vertx.codegen.annotations.VertxGen;
-import io.vertx.core.buffer.Buffer;
 
 import java.math.BigDecimal;
 import java.time.*;
@@ -413,13 +412,13 @@ public interface Tuple {
   OffsetDateTime[] getOffsetDateTimeArray(int pos);
 
   /**
-   * Get an array of  {@link Buffer} value at {@code pos}.
+   * Get an array of {@code byte[]} value at {@code pos}.
    *
    * @param pos the position
    * @return the value or {@code null}
    */
   @GenIgnore
-  Buffer[] getBufferArray(int pos);
+  byte[][] getBufferArray(int pos);
 
   /**
    * Get an array of {@link UUID} value at {@code pos}.
@@ -436,7 +435,7 @@ public interface Tuple {
    * @param pos the position
    * @return the value or {@code null}
    */
-  Buffer getBuffer(int pos);
+  byte[] getBuffer(int pos);
 
   /**
    * Add a boolean value at the end of the tuple.
@@ -517,7 +516,7 @@ public interface Tuple {
    * @return a reference to this, so the API can be used fluently
    */
   @Fluent
-  Tuple addBuffer(Buffer value);
+  Tuple addBuffer(byte[] value);
 
   /**
    * Add a {@link java.time.temporal.Temporal} value at the end of the tuple.
@@ -700,13 +699,13 @@ public interface Tuple {
   Tuple addOffsetDateTimeArray(OffsetDateTime[] value);
 
   /**
-   * Add an array of {@link Buffer} value at the end of the tuple.
+   * Add an array of {@code byte[]} value at the end of the tuple.
    *
    * @param value the value
    * @return a reference to this, so the API can be used fluently
    */
   @GenIgnore
-  Tuple addBufferArray(Buffer[] value);
+  Tuple addBufferArray(byte[][] value);
 
   /**
    * Add an array of {@link UUID} value at the end of the tuple.

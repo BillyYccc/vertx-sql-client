@@ -4,7 +4,6 @@ import io.vertx.sqlclient.data.Numeric;
 import io.vertx.sqlclient.impl.ArrayTuple;
 import io.vertx.sqlclient.impl.RowInternal;
 import io.vertx.sqlclient.impl.RowDesc;
-import io.vertx.core.buffer.Buffer;
 
 import java.math.BigDecimal;
 import java.time.Duration;
@@ -47,7 +46,7 @@ public class MySQLRowImpl extends ArrayTuple implements RowInternal {
       return type.cast(getNumeric(pos));
     } else if (type == String.class) {
       return type.cast(getString(pos));
-    } else if (type == Buffer.class) {
+    } else if (type == byte[].class) {
       return type.cast(getBuffer(pos));
     } else if (type == LocalDate.class) {
       return type.cast(getLocalDate(pos));
@@ -133,7 +132,7 @@ public class MySQLRowImpl extends ArrayTuple implements RowInternal {
   }
 
   @Override
-  public Buffer getBuffer(String name) {
+  public byte[] getBuffer(String name) {
     int pos = rowDesc.columnIndex(name);
     return pos == -1 ? null : getBuffer(pos);
   }
@@ -241,7 +240,7 @@ public class MySQLRowImpl extends ArrayTuple implements RowInternal {
   }
 
   @Override
-  public Buffer[] getBufferArray(String name) {
+  public byte[][] getBufferArray(String name) {
     throw new UnsupportedOperationException();
   }
 

@@ -27,7 +27,6 @@ import io.vertx.pgclient.data.Interval;
 import io.vertx.pgclient.data.Path;
 import io.vertx.pgclient.data.Point;
 import io.vertx.pgclient.data.Polygon;
-import io.vertx.core.buffer.Buffer;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
@@ -84,8 +83,8 @@ enum DataType {
   TIMESTAMPTZ_ARRAY(1185, true, OffsetDateTime[].class),
   INTERVAL(1186, true, Interval.class),
   INTERVAL_ARRAY(1187, true, Interval[].class),
-  BYTEA(17, true, Buffer.class),
-  BYTEA_ARRAY(1001, true, Buffer[].class),
+  BYTEA(17, true, byte[].class),
+  BYTEA_ARRAY(1001, true, byte[][].class),
   MACADDR(829, true, Object.class),
   INET(869, true, Object[].class),
   CIDR(650, true, Object.class),
