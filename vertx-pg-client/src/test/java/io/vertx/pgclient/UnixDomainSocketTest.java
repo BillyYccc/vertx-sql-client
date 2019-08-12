@@ -49,6 +49,8 @@ public class UnixDomainSocketTest {
 
   @Before
   public void before() {
+    // https://github.com/docker/for-mac/issues/483
+    Assume.assumeFalse(System.getProperty("os.name").contains("Mac"));
     options = rule.options();
     if (unixSocketDirectory != null && !unixSocketDirectory.isEmpty()) {
       options.setHost(unixSocketDirectory);

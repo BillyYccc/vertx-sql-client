@@ -23,6 +23,7 @@ import de.flapdoodle.embed.process.runtime.ProcessControl;
 import de.flapdoodle.embed.process.store.IArtifactStore;
 import io.vertx.pgclient.PgConnectOptions;
 import org.junit.rules.ExternalResource;
+import org.testcontainers.containers.GenericContainer;
 import ru.yandex.qatools.embed.postgresql.EmbeddedPostgres;
 import ru.yandex.qatools.embed.postgresql.PostgresProcess;
 import ru.yandex.qatools.embed.postgresql.distribution.Version;
@@ -53,7 +54,8 @@ public class PgRule extends ExternalResource {
 
   private static final String connectionUri = System.getProperty("connection.uri");
   private static final String tlsConnectionUri = System.getProperty("tls.connection.uri");
-  private static EmbeddedPostgres postgres;
+//  private static EmbeddedPostgres postgres;
+  private static final GenericContainer postgres;
 
   public synchronized static PgConnectOptions startPg() throws Exception {
     return startPg(false, false);
