@@ -138,7 +138,9 @@ public class RawBenchmark {
       .setPort(options.getPort())
       .setDatabase(options.getDatabase())
       .setUser(options.getUser())
-      .setPassword(options.getPassword()), new PoolOptions()
+      .setPassword(options.getPassword())
+      .setCachePreparedStatements(true)
+      .setPreparedStatementCacheMaxSize(4096), new PoolOptions()
     );
     CompletableFuture<Void> latch = new CompletableFuture<>();
     long now = System.currentTimeMillis();

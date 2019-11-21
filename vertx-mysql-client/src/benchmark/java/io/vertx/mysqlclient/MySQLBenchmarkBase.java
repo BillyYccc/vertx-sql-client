@@ -41,9 +41,6 @@ public abstract class MySQLBenchmarkBase extends BenchmarkBase {
   @Param("password")
   String password;
 
-  @Param("1")
-  int pipeliningLimit;
-
   Vertx vertx;
   MySQLPool pool;
 
@@ -55,8 +52,10 @@ public abstract class MySQLBenchmarkBase extends BenchmarkBase {
       .setPort(port)
       .setDatabase(database)
       .setUser(username)
-      .setPassword(password), new PoolOptions()
-      .setMaxSize(1));
+      .setPassword(password)
+      .setCachePreparedStatements(true)
+      .setPreparedStatementCacheMaxSize(4096), new PoolOptions()
+      .setMaxSize(64));
   }
 
   @TearDown
