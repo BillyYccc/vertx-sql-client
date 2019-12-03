@@ -60,7 +60,7 @@ class SimpleQueryCommandCodec<T> extends QueryCommandBaseCodec<T, SimpleQueryCom
     // encode packet header
     int packetStartIdx = packet.writerIndex();
     packet.writeMediumLE(0); // will set payload length later by calculation
-    packet.writeByte(sequenceId);
+    packet.writeByte(encoder.sequenceId);
 
     // encode packet payload
     packet.writeByte(CommandType.COM_QUERY);
@@ -84,7 +84,7 @@ class SimpleQueryCommandCodec<T> extends QueryCommandBaseCodec<T, SimpleQueryCom
 
     ByteBuf packetHeader = allocateBuffer(4);
     packetHeader.writeMediumLE((int) length);
-    packetHeader.writeByte(sequenceId++);
+    packetHeader.writeByte(encoder.sequenceId++);
     encoder.chctx.write(packetHeader);
     encoder.socketConnection.socket().sendFile(filePath, 0);
   }
@@ -93,7 +93,7 @@ class SimpleQueryCommandCodec<T> extends QueryCommandBaseCodec<T, SimpleQueryCom
     ByteBuf packet = allocateBuffer(4);
     // encode packet header
     packet.writeMediumLE(0);
-    packet.writeByte(sequenceId);
+    packet.writeByte(encoder.sequenceId);
 
     sendNonSplitPacket(packet);
   }

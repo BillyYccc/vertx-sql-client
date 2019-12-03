@@ -34,7 +34,6 @@ abstract class CommandCodec<R, C extends CommandBase<R>> {
   public Throwable failure;
   public R result;
   final C cmd;
-  int sequenceId;
   MySQLEncoder encoder;
 
   CommandCodec(C cmd) {
@@ -45,6 +44,7 @@ abstract class CommandCodec<R, C extends CommandBase<R>> {
 
   void encode(MySQLEncoder encoder) {
     this.encoder = encoder;
+    this.encoder.sequenceId = 0;
   }
 
   ByteBuf allocateBuffer() {
@@ -73,7 +73,7 @@ abstract class CommandCodec<R, C extends CommandBase<R>> {
       // send a packet with 0xFFFFFF length payload
       ByteBuf packetHeader = allocateBuffer(4);
       packetHeader.writeMediumLE(PACKET_PAYLOAD_LENGTH_LIMIT);
-      packetHeader.writeByte(sequenceId++);
+      packetHeader.writeByte(encoder.sequenceId++);
       encoder.chctx.write(packetHeader);
       encoder.chctx.write(payload.readRetainedSlice(PACKET_PAYLOAD_LENGTH_LIMIT));
     }
@@ -81,13 +81,13 @@ abstract class CommandCodec<R, C extends CommandBase<R>> {
     // send a packet with last part of the payload
     ByteBuf packetHeader = allocateBuffer(4);
     packetHeader.writeMediumLE(payload.readableBytes());
-    packetHeader.writeByte(sequenceId++);
+    packetHeader.writeByte(encoder.sequenceId++);
     encoder.chctx.write(packetHeader);
     encoder.chctx.writeAndFlush(payload);
   }
 
   void sendNonSplitPacket(ByteBuf packet) {
-    sequenceId++;
+    encoder.sequenceId++;
     encoder.chctx.writeAndFlush(packet);
   }
 
@@ -96,7 +96,7 @@ abstract class CommandCodec<R, C extends CommandBase<R>> {
     ByteBuf packet = allocateBuffer(payloadLength + 4);
     // encode packet header
     packet.writeMediumLE(payloadLength);
-    packet.writeByte(sequenceId);
+    packet.writeByte(encoder.sequenceId);
 
     // encode packet payload
     packet.writeBytes(payload);
