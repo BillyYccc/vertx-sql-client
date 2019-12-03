@@ -24,7 +24,6 @@ import io.vertx.sqlclient.impl.RowDesc;
 import io.vertx.sqlclient.impl.command.CommandResponse;
 import io.vertx.sqlclient.impl.command.QueryCommandBase;
 
-import java.nio.charset.StandardCharsets;
 import java.util.function.Consumer;
 import java.util.stream.Collector;
 
@@ -112,7 +111,7 @@ abstract class QueryCommandBaseCodec<T, C extends QueryCommandBase<T>> extends C
       int affectedRows = -1;
       int lastInsertId = -1;
       if (isDeprecatingEofFlagEnabled()) {
-        OkPacket okPacket = decodeOkPacketPayload(payload, StandardCharsets.UTF_8);
+        OkPacket okPacket = decodeOkPacketPayload(payload);
         serverStatusFlags = okPacket.serverStatusFlags();
         affectedRows = (int) okPacket.affectedRows();
         lastInsertId = (int) okPacket.lastInsertId();

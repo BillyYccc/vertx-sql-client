@@ -41,7 +41,7 @@ class SimpleQueryCommandCodec<T> extends QueryCommandBaseCodec<T, SimpleQueryCom
     // may receive ERR_Packet, OK_Packet, LOCAL INFILE Request, Text Resultset
     int firstByte = payload.getUnsignedByte(payload.readerIndex());
     if (firstByte == OK_PACKET_HEADER) {
-      OkPacket okPacket = decodeOkPacketPayload(payload, StandardCharsets.UTF_8);
+      OkPacket okPacket = decodeOkPacketPayload(payload);
       handleSingleResultsetDecodingCompleted(okPacket.serverStatusFlags(), (int) okPacket.affectedRows(), (int) okPacket.lastInsertId());
     } else if (firstByte == ERROR_PACKET_HEADER) {
       handleErrorPacketPayload(payload);

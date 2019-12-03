@@ -3,8 +3,6 @@ package io.vertx.mysqlclient.impl.codec;
 import io.netty.buffer.ByteBuf;
 import io.vertx.sqlclient.impl.command.ExtendedQueryCommandBase;
 
-import java.nio.charset.StandardCharsets;
-
 import static io.vertx.mysqlclient.impl.codec.Packets.*;
 
 abstract class ExtendedQueryCommandBaseCodec<R, C extends ExtendedQueryCommandBase<R>> extends QueryCommandBaseCodec<R, C> {
@@ -21,7 +19,7 @@ abstract class ExtendedQueryCommandBaseCodec<R, C extends ExtendedQueryCommandBa
     // may receive ERR_Packet, OK_Packet, Binary Protocol Resultset
     int firstByte = payload.getUnsignedByte(payload.readerIndex());
     if (firstByte == OK_PACKET_HEADER) {
-      OkPacket okPacket = decodeOkPacketPayload(payload, StandardCharsets.UTF_8);
+      OkPacket okPacket = decodeOkPacketPayload(payload);
       handleSingleResultsetDecodingCompleted(okPacket.serverStatusFlags(), (int) okPacket.affectedRows(), (int) okPacket.lastInsertId());
     } else if (firstByte == ERROR_PACKET_HEADER) {
       handleErrorPacketPayload(payload);

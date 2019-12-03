@@ -72,7 +72,7 @@ abstract class CommandCodec<R, C extends CommandBase<R>> {
     completionHandler.handle(CommandResponse.failure(new MySQLException(errorMessage, errorCode, sqlState)));
   }
 
-  OkPacket decodeOkPacketPayload(ByteBuf payload, Charset charset) {
+  OkPacket decodeOkPacketPayload(ByteBuf payload) {
     payload.skipBytes(1); // skip OK packet header
     long affectedRows = BufferUtils.readLengthEncodedInteger(payload);
     long lastInsertId = BufferUtils.readLengthEncodedInteger(payload);
@@ -90,12 +90,12 @@ abstract class CommandCodec<R, C extends CommandBase<R>> {
       // handle when OK packet does not contain server status info
       statusInfo = null;
     } else if ((encoder.clientCapabilitiesFlag & CapabilitiesFlag.CLIENT_SESSION_TRACK) != 0) {
-      statusInfo = BufferUtils.readLengthEncodedString(payload, charset);
+      statusInfo = BufferUtils.readLengthEncodedString(payload, StandardCharsets.UTF_8);
       if ((serverStatusFlags & ServerStatusFlags.SERVER_SESSION_STATE_CHANGED) != 0) {
-        sessionStateInfo = BufferUtils.readLengthEncodedString(payload, charset);
+        sessionStateInfo = BufferUtils.readLengthEncodedString(payload, StandardCharsets.UTF_8);
       }
     } else {
-      statusInfo = readRestOfPacketString(payload, charset);
+      statusInfo = readRestOfPacketString(payload, StandardCharsets.UTF_8);
     }
     return new OkPacket(affectedRows, lastInsertId, serverStatusFlags, numberOfWarnings, statusInfo, sessionStateInfo);
   }
