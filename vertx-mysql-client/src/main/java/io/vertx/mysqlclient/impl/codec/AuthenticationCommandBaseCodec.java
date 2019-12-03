@@ -39,23 +39,23 @@ abstract class AuthenticationCommandBaseCodec<R, C extends AuthenticationCommand
         if (encoder.socketConnection.isSsl()) {
           // send the non-scrambled password directly since it's on a secure connection
           int nonScrambledPasswordPacketLength = password.length + 1;
-          ByteBuf nonScrambledPasswordPacket = allocateBuffer(nonScrambledPasswordPacketLength + 4);
+          ByteBuf nonScrambledPasswordPacket = encoder.allocateBuffer(nonScrambledPasswordPacketLength + 4);
           nonScrambledPasswordPacket.writeMediumLE(nonScrambledPasswordPacketLength);
           nonScrambledPasswordPacket.writeByte(encoder.sequenceId);
           nonScrambledPasswordPacket.writeBytes(password);
           nonScrambledPasswordPacket.writeByte(0x00); // end with a 0x00
-          sendNonSplitPacket(nonScrambledPasswordPacket);
+          encoder.sendNonSplitPacket(nonScrambledPasswordPacket);
         } else {
           // use server Public Key to encrypt password
           Buffer serverRsaPublicKey = cmd.serverRsaPublicKey();
           if (serverRsaPublicKey == null) {
             // send a public key request
             isWaitingForRsaPublicKey = true;
-            ByteBuf rsaPublicKeyRequest = allocateBuffer(5);
+            ByteBuf rsaPublicKeyRequest = encoder.allocateBuffer(5);
             rsaPublicKeyRequest.writeMediumLE(1);
             rsaPublicKeyRequest.writeByte(encoder.sequenceId);
             rsaPublicKeyRequest.writeByte(AUTH_PUBLIC_KEY_REQUEST_FLAG);
-            sendNonSplitPacket(rsaPublicKeyRequest);
+            encoder.sendNonSplitPacket(rsaPublicKeyRequest);
           } else {
             // send encrypted password
             sendEncryptedPasswordWithServerRsaPublicKey(password, serverRsaPublicKey.toString());
@@ -78,7 +78,7 @@ abstract class AuthenticationCommandBaseCodec<R, C extends AuthenticationCommand
       completionHandler.handle(CommandResponse.failure(e));
       return;
     }
-    sendBytesAsPacket(encryptedPassword);
+    encoder.sendBytesAsPacket(encryptedPassword);
   }
 
   protected final void encodeConnectionAttributes(Map<String, String> clientConnectionAttributes, ByteBuf packet) {

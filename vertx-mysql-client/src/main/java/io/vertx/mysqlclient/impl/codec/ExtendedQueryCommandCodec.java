@@ -25,6 +25,8 @@ import static io.vertx.mysqlclient.impl.codec.Packets.EnumCursorType.CURSOR_TYPE
 import static io.vertx.mysqlclient.impl.codec.Packets.EnumCursorType.CURSOR_TYPE_READ_ONLY;
 
 class ExtendedQueryCommandCodec<R> extends ExtendedQueryCommandBaseCodec<R, ExtendedQueryCommand<R>> {
+  private static final int COM_STMT_FETCH_PAYLOAD_LENGTH = 9;
+
   ExtendedQueryCommandCodec(ExtendedQueryCommand<R> cmd) {
     super(cmd);
     if (cmd.fetch() > 0 && statement.isCursorOpen) {
@@ -100,7 +102,7 @@ class ExtendedQueryCommandCodec<R> extends ExtendedQueryCommandBaseCodec<R, Exte
   }
 
   private void sendStatementExecuteCommand(MySQLPreparedStatement statement, boolean sendTypesToServer, Tuple params, byte cursorType) {
-    ByteBuf packet = allocateBuffer();
+    ByteBuf packet = encoder.allocateBuffer();
     // encode packet header
     int packetStartIdx = packet.writerIndex();
     packet.writeMediumLE(0); // will set payload length later by calculation
@@ -149,14 +151,13 @@ class ExtendedQueryCommandCodec<R> extends ExtendedQueryCommandBaseCodec<R, Exte
     int payloadLength = packet.writerIndex() - packetStartIdx - 4;
     packet.setMediumLE(packetStartIdx, payloadLength);
 
-    sendPacket(packet, payloadLength);
+    encoder.sendPacket(packet, payloadLength);
   }
 
   private void sendStatementFetchCommand(long statementId, int count) {
-    ByteBuf packet = allocateBuffer();
+    ByteBuf packet = encoder.allocateBuffer(COM_STMT_FETCH_PAYLOAD_LENGTH + 4);
     // encode packet header
-    int packetStartIdx = packet.writerIndex();
-    packet.writeMediumLE(0); // will set payload length later by calculation
+    packet.writeMediumLE(COM_STMT_FETCH_PAYLOAD_LENGTH);
     packet.writeByte(encoder.sequenceId);
 
     // encode packet payload
@@ -164,10 +165,6 @@ class ExtendedQueryCommandCodec<R> extends ExtendedQueryCommandBaseCodec<R, Exte
     packet.writeIntLE((int) statementId);
     packet.writeIntLE(count);
 
-    // set payload length
-    int lenOfPayload = packet.writerIndex() - packetStartIdx - 4;
-    packet.setMediumLE(packetStartIdx, lenOfPayload);
-
-    encoder.chctx.writeAndFlush(packet);
+    encoder.sendNonSplitPacket(packet);
   }
 }

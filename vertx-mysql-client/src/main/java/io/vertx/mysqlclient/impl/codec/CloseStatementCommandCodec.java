@@ -5,7 +5,7 @@ import io.vertx.sqlclient.impl.command.CloseStatementCommand;
 import io.vertx.sqlclient.impl.command.CommandResponse;
 
 class CloseStatementCommandCodec extends CommandCodec<Void, CloseStatementCommand> {
-  private static final int PAYLOAD_LENGTH = 5;
+  private static final int COM_STMT_RESET_PAYLOAD_LENGTH = 5;
 
   CloseStatementCommandCodec(CloseStatementCommand cmd) {
     super(cmd);
@@ -26,15 +26,15 @@ class CloseStatementCommandCodec extends CommandCodec<Void, CloseStatementComman
   }
 
   private void sendCloseStatementCommand(MySQLPreparedStatement statement) {
-    ByteBuf packet = allocateBuffer(PAYLOAD_LENGTH + 4);
+    ByteBuf packet = encoder.allocateBuffer(COM_STMT_RESET_PAYLOAD_LENGTH + 4);
     // encode packet header
-    packet.writeMediumLE(PAYLOAD_LENGTH);
+    packet.writeMediumLE(COM_STMT_RESET_PAYLOAD_LENGTH);
     packet.writeByte(encoder.sequenceId);
 
     // encode packet payload
     packet.writeByte(CommandType.COM_STMT_CLOSE);
     packet.writeIntLE((int) statement.statementId);
 
-    sendNonSplitPacket(packet);
+    encoder.sendNonSplitPacket(packet);
   }
 }

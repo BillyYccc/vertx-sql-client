@@ -56,7 +56,7 @@ class SimpleQueryCommandCodec<T> extends QueryCommandBaseCodec<T, SimpleQueryCom
   }
 
   private void sendQueryCommand() {
-    ByteBuf packet = allocateBuffer();
+    ByteBuf packet = encoder.allocateBuffer();
     // encode packet header
     int packetStartIdx = packet.writerIndex();
     packet.writeMediumLE(0); // will set payload length later by calculation
@@ -70,7 +70,7 @@ class SimpleQueryCommandCodec<T> extends QueryCommandBaseCodec<T, SimpleQueryCom
     int payloadLength = packet.writerIndex() - packetStartIdx - 4;
     packet.setMediumLE(packetStartIdx, payloadLength);
 
-    sendPacket(packet, payloadLength);
+    encoder.sendPacket(packet, payloadLength);
   }
 
   private void sendFileWrappedInPacket(String filePath) {
@@ -82,7 +82,7 @@ class SimpleQueryCommandCodec<T> extends QueryCommandBaseCodec<T, SimpleQueryCom
     long length = file.length();
     // 16MB+ packet necessary?
 
-    ByteBuf packetHeader = allocateBuffer(4);
+    ByteBuf packetHeader = encoder.allocateBuffer(4);
     packetHeader.writeMediumLE((int) length);
     packetHeader.writeByte(encoder.sequenceId++);
     encoder.chctx.write(packetHeader);
@@ -90,11 +90,11 @@ class SimpleQueryCommandCodec<T> extends QueryCommandBaseCodec<T, SimpleQueryCom
   }
 
   private void sendEmptyPacket() {
-    ByteBuf packet = allocateBuffer(4);
+    ByteBuf packet = encoder.allocateBuffer(4);
     // encode packet header
     packet.writeMediumLE(0);
     packet.writeByte(encoder.sequenceId);
 
-    sendNonSplitPacket(packet);
+    encoder.sendNonSplitPacket(packet);
   }
 }

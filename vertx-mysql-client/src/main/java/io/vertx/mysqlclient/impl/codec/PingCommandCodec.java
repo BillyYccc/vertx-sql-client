@@ -5,7 +5,7 @@ import io.vertx.mysqlclient.impl.command.PingCommand;
 import io.vertx.sqlclient.impl.command.CommandResponse;
 
 class PingCommandCodec extends CommandCodec<Void, PingCommand> {
-  private static final int PAYLOAD_LENGTH = 1;
+  private static final int COM_PING_PAYLOAD_LENGTH = 1;
 
   PingCommandCodec(PingCommand cmd) {
     super(cmd);
@@ -24,14 +24,14 @@ class PingCommandCodec extends CommandCodec<Void, PingCommand> {
   }
 
   private void sendPingCommand() {
-    ByteBuf packet = allocateBuffer(PAYLOAD_LENGTH + 4);
+    ByteBuf packet = encoder.allocateBuffer(COM_PING_PAYLOAD_LENGTH + 4);
     // encode packet header
-    packet.writeMediumLE(PAYLOAD_LENGTH);
+    packet.writeMediumLE(COM_PING_PAYLOAD_LENGTH);
     packet.writeByte(encoder.sequenceId);
 
     // encode packet payload
     packet.writeByte(CommandType.COM_PING);
 
-    sendNonSplitPacket(packet);
+    encoder.sendNonSplitPacket(packet);
   }
 }

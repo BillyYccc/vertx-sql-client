@@ -22,7 +22,7 @@ class InitDbCommandCodec extends CommandCodec<Void, InitDbCommand> {
   }
 
   private void sendInitDbCommand() {
-    ByteBuf packet = allocateBuffer();
+    ByteBuf packet = encoder.allocateBuffer();
     // encode packet header
     int packetStartIdx = packet.writerIndex();
     packet.writeMediumLE(0); // will set payload length later by calculation
@@ -33,9 +33,9 @@ class InitDbCommandCodec extends CommandCodec<Void, InitDbCommand> {
     packet.writeCharSequence(cmd.schemaName(), StandardCharsets.UTF_8);
 
     // set payload length
-    int lenOfPayload = packet.writerIndex() - packetStartIdx - 4;
-    packet.setMediumLE(packetStartIdx, lenOfPayload);
+    int payloadLength = packet.writerIndex() - packetStartIdx - 4;
+    packet.setMediumLE(packetStartIdx, payloadLength);
 
-    sendPacket(packet, lenOfPayload);
+    encoder.sendPacket(packet, payloadLength);
   }
 }

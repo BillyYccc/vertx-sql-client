@@ -211,11 +211,11 @@ class InitialHandshakeCommandCodec extends AuthenticationCommandBaseCodec<Connec
         completionHandler.handle(CommandResponse.failure(new UnsupportedOperationException("Unsupported authentication method: " + pluginName)));
         return;
     }
-    sendBytesAsPacket(scrambledPassword);
+    encoder.sendBytesAsPacket(scrambledPassword);
   }
 
   private void sendSslRequest() {
-    ByteBuf packet = allocateBuffer(36);
+    ByteBuf packet = encoder.allocateBuffer(36);
     // encode packet header
     packet.writeMediumLE(32);
     packet.writeByte(encoder.sequenceId);
@@ -227,11 +227,11 @@ class InitialHandshakeCommandCodec extends AuthenticationCommandBaseCodec<Connec
     packet.writeByte(collation.collationId());
     packet.writeZero(23); // filler
 
-    sendNonSplitPacket(packet);
+    encoder.sendNonSplitPacket(packet);
   }
 
   private void sendHandshakeResponseMessage(String username, String password, String database, byte[] nonce, String authMethodName, Map<String, String> clientConnectionAttributes) {
-    ByteBuf packet = allocateBuffer();
+    ByteBuf packet = encoder.allocateBuffer();
     // encode packet header
     int packetStartIdx = packet.writerIndex();
     packet.writeMediumLE(0); // will set payload length later by calculation
@@ -283,7 +283,7 @@ class InitialHandshakeCommandCodec extends AuthenticationCommandBaseCodec<Connec
     int payloadLength = packet.writerIndex() - packetStartIdx - 4;
     packet.setMediumLE(packetStartIdx, payloadLength);
 
-    sendPacket(packet, payloadLength);
+    encoder.sendPacket(packet, payloadLength);
   }
 
   private boolean isTlsSupportedByServer(int serverCapabilitiesFlags) {

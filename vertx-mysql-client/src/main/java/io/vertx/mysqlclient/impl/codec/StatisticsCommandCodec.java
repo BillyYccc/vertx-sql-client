@@ -4,10 +4,8 @@ import io.netty.buffer.ByteBuf;
 import io.vertx.mysqlclient.impl.command.StatisticsCommand;
 import io.vertx.sqlclient.impl.command.CommandResponse;
 
-import java.nio.charset.StandardCharsets;
-
 class StatisticsCommandCodec extends CommandCodec<String, StatisticsCommand> {
-  private static final int PAYLOAD_LENGTH = 1;
+  private static final int COM_STATISTICS_PAYLOAD_LENGTH = 1;
 
   StatisticsCommandCodec(StatisticsCommand cmd) {
     super(cmd);
@@ -25,14 +23,14 @@ class StatisticsCommandCodec extends CommandCodec<String, StatisticsCommand> {
   }
 
   private void sendStatisticsCommand() {
-    ByteBuf packet = allocateBuffer(PAYLOAD_LENGTH + 4);
+    ByteBuf packet = encoder.allocateBuffer(COM_STATISTICS_PAYLOAD_LENGTH + 4);
     // encode packet header
-    packet.writeMediumLE(PAYLOAD_LENGTH);
+    packet.writeMediumLE(COM_STATISTICS_PAYLOAD_LENGTH);
     packet.writeByte(encoder.sequenceId);
 
     // encode packet payload
     packet.writeByte(CommandType.COM_STATISTICS);
 
-    sendNonSplitPacket(packet);
+    encoder.sendNonSplitPacket(packet);
   }
 }

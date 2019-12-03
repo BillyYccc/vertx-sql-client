@@ -21,8 +21,6 @@ import io.vertx.sqlclient.impl.PreparedStatement;
 import io.vertx.sqlclient.impl.command.CommandResponse;
 import io.vertx.sqlclient.impl.command.PrepareStatementCommand;
 
-import java.nio.charset.StandardCharsets;
-
 import static io.vertx.mysqlclient.impl.codec.Packets.ERROR_PACKET_HEADER;
 
 class PrepareStatementCodec extends CommandCodec<PreparedStatement, PrepareStatementCommand> {
@@ -110,7 +108,7 @@ class PrepareStatementCodec extends CommandCodec<PreparedStatement, PrepareState
   }
 
   private void sendStatementPrepareCommand() {
-    ByteBuf packet = allocateBuffer();
+    ByteBuf packet = encoder.allocateBuffer();
     // encode packet header
     int packetStartIdx = packet.writerIndex();
     packet.writeMediumLE(0); // will set payload length later by calculation
@@ -124,7 +122,7 @@ class PrepareStatementCodec extends CommandCodec<PreparedStatement, PrepareState
     int payloadLength = packet.writerIndex() - packetStartIdx - 4;
     packet.setMediumLE(packetStartIdx, payloadLength);
 
-    sendPacket(packet, payloadLength);
+    encoder.sendPacket(packet, payloadLength);
   }
 
   private void handleReadyForQuery() {

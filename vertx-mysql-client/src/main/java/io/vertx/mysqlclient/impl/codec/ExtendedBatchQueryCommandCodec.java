@@ -50,7 +50,7 @@ class ExtendedBatchQueryCommandCodec<R> extends ExtendedQueryCommandBaseCodec<R,
   }
 
   private void sendBatchStatementExecuteCommand(MySQLPreparedStatement statement, Tuple params) {
-    ByteBuf packet = allocateBuffer();
+    ByteBuf packet = encoder.allocateBuffer();
     // encode packet header
     int packetStartIdx = packet.writerIndex();
     packet.writeMediumLE(0); // will set payload length later by calculation
@@ -98,6 +98,6 @@ class ExtendedBatchQueryCommandCodec<R> extends ExtendedQueryCommandBaseCodec<R,
     int payloadLength = packet.writerIndex() - packetStartIdx - 4;
     packet.setMediumLE(packetStartIdx, payloadLength);
 
-    sendPacket(packet, payloadLength);
+    encoder.sendPacket(packet, payloadLength);
   }
 }

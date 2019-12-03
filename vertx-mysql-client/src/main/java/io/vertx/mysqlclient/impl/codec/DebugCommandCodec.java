@@ -4,7 +4,7 @@ import io.netty.buffer.ByteBuf;
 import io.vertx.mysqlclient.impl.command.DebugCommand;
 
 class DebugCommandCodec extends CommandCodec<Void, DebugCommand> {
-  private static final int PAYLOAD_LENGTH = 1;
+  private static final int COM_DEBUG_PAYLOAD_LENGTH = 1;
 
   DebugCommandCodec(DebugCommand cmd) {
     super(cmd);
@@ -22,14 +22,14 @@ class DebugCommandCodec extends CommandCodec<Void, DebugCommand> {
   }
 
   private void sendDebugCommand() {
-    ByteBuf packet = allocateBuffer(PAYLOAD_LENGTH + 4);
+    ByteBuf packet = encoder.allocateBuffer(COM_DEBUG_PAYLOAD_LENGTH + 4);
     // encode packet header
-    packet.writeMediumLE(PAYLOAD_LENGTH);
+    packet.writeMediumLE(COM_DEBUG_PAYLOAD_LENGTH);
     packet.writeByte(encoder.sequenceId);
 
     // encode packet payload
     packet.writeByte(CommandType.COM_DEBUG);
 
-    sendPacket(packet, 1);
+    encoder.sendNonSplitPacket(packet);
   }
 }

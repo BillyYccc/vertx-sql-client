@@ -1,5 +1,6 @@
 package io.vertx.mysqlclient.impl.codec;
 
+import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOutboundHandlerAdapter;
 import io.netty.channel.ChannelPromise;
@@ -11,7 +12,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayDeque;
 
-import static io.vertx.mysqlclient.impl.codec.CapabilitiesFlag.*;
+import static io.vertx.mysqlclient.impl.codec.Packets.PACKET_PAYLOAD_LENGTH_LIMIT;
 
 class MySQLEncoder extends ChannelOutboundHandlerAdapter {
 
@@ -54,6 +55,63 @@ class MySQLEncoder extends ChannelOutboundHandlerAdapter {
     };
     inflight.add(codec);
     codec.encode(this);
+  }
+
+  ByteBuf allocateBuffer() {
+    return chctx.alloc().ioBuffer();
+  }
+
+  ByteBuf allocateBuffer(int capacity) {
+    return chctx.alloc().ioBuffer(capacity);
+  }
+
+  final void sendBytesAsPacket(byte[] payload) {
+    int payloadLength = payload.length;
+    ByteBuf packet = allocateBuffer(payloadLength + 4);
+    // encode packet header
+    packet.writeMediumLE(payloadLength);
+    packet.writeByte(sequenceId);
+
+    // encode packet payload
+    packet.writeBytes(payload);
+
+    sendNonSplitPacket(packet);
+  }
+
+  void sendPacket(ByteBuf packet, int payloadLength) {
+    if (payloadLength >= PACKET_PAYLOAD_LENGTH_LIMIT) {
+      /*
+         The original packet exceeds the limit of packet length, split the packet here.
+         if payload length is exactly 16MBytes-1byte(0xFFFFFF), an empty packet is needed to indicate the termination.
+       */
+      sendSplitPacket(packet);
+    } else {
+      sendNonSplitPacket(packet);
+    }
+  }
+
+  void sendSplitPacket(ByteBuf packet) {
+    ByteBuf payload = packet.skipBytes(4);
+    while (payload.readableBytes() >= PACKET_PAYLOAD_LENGTH_LIMIT) {
+      // send a packet with 0xFFFFFF length payload
+      ByteBuf packetHeader = allocateBuffer(4);
+      packetHeader.writeMediumLE(PACKET_PAYLOAD_LENGTH_LIMIT);
+      packetHeader.writeByte(sequenceId++);
+      chctx.write(packetHeader);
+      chctx.write(payload.readRetainedSlice(PACKET_PAYLOAD_LENGTH_LIMIT));
+    }
+
+    // send a packet with last part of the payload
+    ByteBuf packetHeader = allocateBuffer(4);
+    packetHeader.writeMediumLE(payload.readableBytes());
+    packetHeader.writeByte(sequenceId++);
+    chctx.write(packetHeader);
+    chctx.writeAndFlush(payload);
+  }
+
+  final void sendNonSplitPacket(ByteBuf packet) {
+    sequenceId++;
+    chctx.writeAndFlush(packet);
   }
 
   private CommandCodec<?, ?> wrap(CommandBase<?> cmd) {

@@ -4,7 +4,7 @@ import io.netty.buffer.ByteBuf;
 import io.vertx.mysqlclient.impl.command.ResetConnectionCommand;
 
 class ResetConnectionCommandCodec extends CommandCodec<Void, ResetConnectionCommand> {
-  private static final int PAYLOAD_LENGTH = 1;
+  private static final int COM_RESET_CONNECTION_PAYLOAD_LENGTH = 1;
 
   ResetConnectionCommandCodec(ResetConnectionCommand cmd) {
     super(cmd);
@@ -22,14 +22,14 @@ class ResetConnectionCommandCodec extends CommandCodec<Void, ResetConnectionComm
   }
 
   private void sendResetConnectionCommand() {
-    ByteBuf packet = allocateBuffer(PAYLOAD_LENGTH + 4);
+    ByteBuf packet = encoder.allocateBuffer(COM_RESET_CONNECTION_PAYLOAD_LENGTH + 4);
     // encode packet header
-    packet.writeMediumLE(PAYLOAD_LENGTH);
+    packet.writeMediumLE(COM_RESET_CONNECTION_PAYLOAD_LENGTH);
     packet.writeByte(encoder.sequenceId);
 
     // encode packet payload
     packet.writeByte(CommandType.COM_RESET_CONNECTION);
 
-    sendNonSplitPacket(packet);
+    encoder.sendNonSplitPacket(packet);
   }
 }

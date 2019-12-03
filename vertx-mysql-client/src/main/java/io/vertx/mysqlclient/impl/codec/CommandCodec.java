@@ -47,63 +47,6 @@ abstract class CommandCodec<R, C extends CommandBase<R>> {
     this.encoder.sequenceId = 0;
   }
 
-  ByteBuf allocateBuffer() {
-    return encoder.chctx.alloc().ioBuffer();
-  }
-
-  ByteBuf allocateBuffer(int capacity) {
-    return encoder.chctx.alloc().ioBuffer(capacity);
-  }
-
-  void sendPacket(ByteBuf packet, int payloadLength) {
-    if (payloadLength >= PACKET_PAYLOAD_LENGTH_LIMIT) {
-      /*
-         The original packet exceeds the limit of packet length, split the packet here.
-         if payload length is exactly 16MBytes-1byte(0xFFFFFF), an empty packet is needed to indicate the termination.
-       */
-      sendSplitPacket(packet);
-    } else {
-      sendNonSplitPacket(packet);
-    }
-  }
-
-  private void sendSplitPacket(ByteBuf packet) {
-    ByteBuf payload = packet.skipBytes(4);
-    while (payload.readableBytes() >= PACKET_PAYLOAD_LENGTH_LIMIT) {
-      // send a packet with 0xFFFFFF length payload
-      ByteBuf packetHeader = allocateBuffer(4);
-      packetHeader.writeMediumLE(PACKET_PAYLOAD_LENGTH_LIMIT);
-      packetHeader.writeByte(encoder.sequenceId++);
-      encoder.chctx.write(packetHeader);
-      encoder.chctx.write(payload.readRetainedSlice(PACKET_PAYLOAD_LENGTH_LIMIT));
-    }
-
-    // send a packet with last part of the payload
-    ByteBuf packetHeader = allocateBuffer(4);
-    packetHeader.writeMediumLE(payload.readableBytes());
-    packetHeader.writeByte(encoder.sequenceId++);
-    encoder.chctx.write(packetHeader);
-    encoder.chctx.writeAndFlush(payload);
-  }
-
-  void sendNonSplitPacket(ByteBuf packet) {
-    encoder.sequenceId++;
-    encoder.chctx.writeAndFlush(packet);
-  }
-
-  final void sendBytesAsPacket(byte[] payload) {
-    int payloadLength = payload.length;
-    ByteBuf packet = allocateBuffer(payloadLength + 4);
-    // encode packet header
-    packet.writeMediumLE(payloadLength);
-    packet.writeByte(encoder.sequenceId);
-
-    // encode packet payload
-    packet.writeBytes(payload);
-
-    sendNonSplitPacket(packet);
-  }
-
   void handleOkPacketOrErrorPacketPayload(ByteBuf payload) {
     int header = payload.getUnsignedByte(payload.readerIndex());
     switch (header) {

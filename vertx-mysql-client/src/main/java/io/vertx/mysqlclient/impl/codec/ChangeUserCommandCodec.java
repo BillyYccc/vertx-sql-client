@@ -63,11 +63,11 @@ class ChangeUserCommandCodec extends AuthenticationCommandBaseCodec<Void, Change
         completionHandler.handle(CommandResponse.failure(new UnsupportedOperationException("Unsupported authentication method: " + pluginName)));
         return;
     }
-    sendBytesAsPacket(scrambledPassword);
+    encoder.sendBytesAsPacket(scrambledPassword);
   }
 
   private void sendChangeUserCommand() {
-    ByteBuf packet = allocateBuffer();
+    ByteBuf packet = encoder.allocateBuffer();
     // encode packet header
     int packetStartIdx = packet.writerIndex();
     packet.writeMediumLE(0); // will set payload length later by calculation
@@ -100,9 +100,9 @@ class ChangeUserCommandCodec extends AuthenticationCommandBaseCodec<Void, Change
     }
 
     // set payload length
-    int lenOfPayload = packet.writerIndex() - packetStartIdx - 4;
-    packet.setMediumLE(packetStartIdx, lenOfPayload);
+    int payloadLength = packet.writerIndex() - packetStartIdx - 4;
+    packet.setMediumLE(packetStartIdx, payloadLength);
 
-    sendPacket(packet, lenOfPayload);
+    encoder.sendPacket(packet, payloadLength);
   }
 }
