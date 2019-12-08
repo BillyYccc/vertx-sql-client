@@ -33,6 +33,8 @@ public class RawBenchmark {
   public static void main(String[] args) throws Exception {
     MySQLRule rule = new MySQLRule();
     MySQLConnectOptions options = rule.startServer(MySQLRule.DatabaseType.MySQL, "8.0", false);
+    options.setCachePreparedStatements(true);
+    options.setPreparedStatementCacheMaxSize(64);
     /* remote usage
     MySQLConnectOptions options = new MySQLConnectOptions()
       .setHost("localhost")
@@ -85,7 +87,7 @@ public class RawBenchmark {
   private static void benchmark(String name, MySQLConnectOptions options, Benchmark benchmark) throws Exception {
     Connection conn = DriverManager.getConnection("jdbc:mysql://"
       + options.getHost() + ":"
-      + options.getPort() + "/testschema", options.getUser(), options.getPassword());
+      + options.getPort() + "/testschema?useServerPrepStmts=true&cachePrepStmts=true&prepStmtCacheSize=64", options.getUser(), options.getPassword());
     long now = System.currentTimeMillis();
     benchmark.run(conn);
     System.out.println(name + ": " + (System.currentTimeMillis() - now));
@@ -105,6 +107,7 @@ public class RawBenchmark {
         if (ar.succeeded()) {
           doSingleQuery(conn, remaining -1, latch);
         } else {
+          ar.cause().printStackTrace();
           latch.completeExceptionally(ar.cause());
         }
       });
@@ -133,15 +136,7 @@ public class RawBenchmark {
 
   private static void benchmark(String name, MySQLConnectOptions options, BiConsumer<SqlConnection, CompletableFuture<Void>> benchmark) throws Exception {
     Vertx vertx = Vertx.vertx();
-    MySQLPool client = MySQLPool.pool(vertx, new MySQLConnectOptions()
-      .setHost(options.getHost())
-      .setPort(options.getPort())
-      .setDatabase(options.getDatabase())
-      .setUser(options.getUser())
-      .setPassword(options.getPassword())
-      .setCachePreparedStatements(true)
-      .setPreparedStatementCacheMaxSize(4096), new PoolOptions()
-    );
+    MySQLPool client = MySQLPool.pool(vertx, new MySQLConnectOptions(options), new PoolOptions());
     CompletableFuture<Void> latch = new CompletableFuture<>();
     long now = System.currentTimeMillis();
     client.getConnection(ar -> {
