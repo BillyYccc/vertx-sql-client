@@ -27,7 +27,7 @@ public class Main {
 
   public static void main(String[] argv) throws Exception {
     MySQLRule rule = new MySQLRule();
-    MySQLConnectOptions options = rule.startServer(MySQLRule.DatabaseType.MySQL, "8.0", false);
+    MySQLConnectOptions options = rule.startServer(false);
     int len = argv.length;
     argv = Arrays.copyOf(argv, len + 10);
     argv[len] = "-p";

@@ -32,7 +32,7 @@ public class RawBenchmark {
 
   public static void main(String[] args) throws Exception {
     MySQLRule rule = new MySQLRule();
-    MySQLConnectOptions options = rule.startServer(MySQLRule.DatabaseType.MySQL, "8.0", false);
+    MySQLConnectOptions options = rule.startServer(false);
     options.setCachePreparedStatements(true);
     options.setPreparedStatementCacheMaxSize(64);
     /* remote usage
