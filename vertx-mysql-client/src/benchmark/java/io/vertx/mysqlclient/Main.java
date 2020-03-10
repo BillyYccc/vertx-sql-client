@@ -17,17 +17,32 @@
 
 package io.vertx.mysqlclient;
 
-import io.vertx.mysqlclient.junit.MySQLRule;
 import org.openjdk.jmh.runner.*;
 import org.openjdk.jmh.runner.options.*;
+import org.testcontainers.containers.BindMode;
+import org.testcontainers.containers.GenericContainer;
 
 import java.util.Arrays;
 
 public class Main {
 
   public static void main(String[] argv) throws Exception {
-    MySQLRule rule = new MySQLRule();
-    MySQLConnectOptions options = rule.startServer(false);
+    GenericContainer server = new GenericContainer("mysql:8.0")
+      .withEnv("MYSQL_USER", "mysql")
+      .withEnv("MYSQL_PASSWORD", "password")
+      .withEnv("MYSQL_ROOT_PASSWORD", "password")
+      .withEnv("MYSQL_DATABASE", "testschema")
+      .withExposedPorts(3306)
+      .withClasspathResourceMapping("init.sql", "/docker-entrypoint-initdb.d/init.sql", BindMode.READ_ONLY);
+    server.start();
+    MySQLConnectOptions options = new MySQLConnectOptions()
+      .setPort(server.getMappedPort(3306))
+      .setHost(server.getContainerIpAddress())
+      .setDatabase("testschema")
+      .setUser("mysql")
+      .setPassword("password")
+      .setCachePreparedStatements(true)
+      .setPreparedStatementCacheMaxSize(4096);
     int len = argv.length;
     argv = Arrays.copyOf(argv, len + 10);
     argv[len] = "-p";
@@ -107,7 +122,7 @@ public class Main {
       System.err.println(" " + e.getMessage());
       // System.exit(1);
     } finally {
-      rule.stopServer();
+      server.stop();
     }
   }
 }

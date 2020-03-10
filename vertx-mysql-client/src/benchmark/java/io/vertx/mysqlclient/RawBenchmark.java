@@ -17,9 +17,10 @@
 
 package io.vertx.mysqlclient;
 
-import io.vertx.mysqlclient.junit.MySQLRule;
 import io.vertx.sqlclient.*;
 import io.vertx.core.Vertx;
+import org.testcontainers.containers.BindMode;
+import org.testcontainers.containers.GenericContainer;
 
 import java.sql.*;
 import java.util.concurrent.CompletableFuture;
@@ -31,10 +32,22 @@ public class RawBenchmark {
   private static final Tuple args = Tuple.of(1);
 
   public static void main(String[] args) throws Exception {
-    MySQLRule rule = new MySQLRule();
-    MySQLConnectOptions options = rule.startServer(false);
-    options.setCachePreparedStatements(true);
-    options.setPreparedStatementCacheMaxSize(64);
+    GenericContainer server = new GenericContainer("mysql:8.0")
+      .withEnv("MYSQL_USER", "mysql")
+      .withEnv("MYSQL_PASSWORD", "password")
+      .withEnv("MYSQL_ROOT_PASSWORD", "password")
+      .withEnv("MYSQL_DATABASE", "testschema")
+      .withExposedPorts(3306)
+      .withClasspathResourceMapping("init.sql", "/docker-entrypoint-initdb.d/init.sql", BindMode.READ_ONLY);
+    server.start();
+    MySQLConnectOptions options = new MySQLConnectOptions()
+      .setPort(server.getMappedPort(3306))
+      .setHost(server.getContainerIpAddress())
+      .setDatabase("testschema")
+      .setUser("mysql")
+      .setPassword("password")
+      .setCachePreparedStatements(true)
+      .setPreparedStatementCacheMaxSize(64);
     /* remote usage
     MySQLConnectOptions options = new MySQLConnectOptions()
       .setHost("localhost")
@@ -48,7 +61,7 @@ public class RawBenchmark {
     singleSelectJDBC(options, 200_000);
     singleSelect(options, 200_000);
 
-    rule.stopServer();
+    server.stop();
   }
 
   interface Benchmark {
