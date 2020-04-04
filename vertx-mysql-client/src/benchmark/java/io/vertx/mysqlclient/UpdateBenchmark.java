@@ -49,7 +49,7 @@ public class UpdateBenchmark extends MySQLBenchmarkBase {
   @Benchmark
   public void poolPreparedBatchUpdate(Blackhole blackhole) throws Exception {
     CompletableFuture<SqlResult<RowSet<Row>>> latch = new CompletableFuture<>();
-    pool.preparedBatch("UPDATE world SET randomnumber=? WHERE id=?", batch, ar -> {
+    pool.preparedQuery("UPDATE world SET randomnumber=? WHERE id=?").executeBatch(batch, ar -> {
       if (ar.succeeded()) {
         latch.complete(ar.result());
       } else {

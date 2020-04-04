@@ -17,7 +17,7 @@
 
 package io.vertx.mysqlclient;
 
-import io.vertx.sqlclient.PreparedQuery;
+import io.vertx.sqlclient.PreparedStatement;
 import io.vertx.sqlclient.SqlResult;
 import io.vertx.sqlclient.SqlConnection;
 import org.openjdk.jmh.annotations.*;
@@ -32,7 +32,8 @@ public class LargeSelectBenchmark extends MySQLBenchmarkBase {
   @Benchmark
   public void poolPreparedQuery(Blackhole blackhole) throws Exception {
     CompletableFuture<SqlResult> latch = new CompletableFuture<>();
-    pool.preparedQuery("SELECT id, randomnumber from world", ar -> {
+    pool.preparedQuery("SELECT id, randomnumber from world")
+      .execute(ar -> {
       if (ar.succeeded()) {
         latch.complete(ar.result());
       } else {
@@ -48,7 +49,8 @@ public class LargeSelectBenchmark extends MySQLBenchmarkBase {
     pool.getConnection(ar1 -> {
       if (ar1.succeeded()) {
         SqlConnection conn = ar1.result();
-        conn.preparedQuery("SELECT id, randomnumber from world", ar2 -> {
+        conn.preparedQuery("SELECT id, randomnumber from world")
+          .execute(ar2 -> {
           conn.close();
           if (ar2.succeeded()) {
             latch.complete(ar2.result());
@@ -71,8 +73,8 @@ public class LargeSelectBenchmark extends MySQLBenchmarkBase {
         SqlConnection conn = ar1.result();
         conn.prepare("SELECT id, randomnumber from world", ar2 -> {
           if (ar2.succeeded()) {
-            PreparedQuery ps = ar2.result();
-            ps.execute(ar3 -> {
+            PreparedStatement ps = ar2.result();
+            ps.query().execute(ar3 -> {
               conn.close();
               if (ar3.succeeded()) {
                 latch.complete(ar3.result());

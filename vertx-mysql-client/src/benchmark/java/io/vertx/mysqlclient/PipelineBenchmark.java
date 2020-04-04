@@ -41,7 +41,7 @@ public class PipelineBenchmark extends MySQLBenchmarkBase {
     CompletableFuture<SqlResult> latch = new CompletableFuture<>();
     AtomicInteger count = new AtomicInteger();
     for (int i = 0;i < ITER;i++) {
-      pool.query("SELECT id, randomnumber from world where id=1", ar -> {
+      pool.query("SELECT id, randomnumber from world where id=1").execute(ar -> {
         if (ar.succeeded()) {
           if (count.incrementAndGet() == ITER) {
             latch.complete(ar.result());
@@ -62,7 +62,7 @@ public class PipelineBenchmark extends MySQLBenchmarkBase {
   }
 
   private void doSingle(int count, CompletableFuture<SqlResult> latch) {
-    pool.query("SELECT id, randomnumber from world where id=1", ar -> {
+    pool.query("SELECT id, randomnumber from world where id=1").execute(ar -> {
       if (ar.succeeded()) {
         if (count + 1 == ITER) {
           latch.complete(ar.result());

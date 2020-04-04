@@ -23,6 +23,7 @@ import org.testcontainers.containers.BindMode;
 import org.testcontainers.containers.GenericContainer;
 
 import java.sql.*;
+import java.sql.PreparedStatement;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
@@ -116,7 +117,7 @@ public class RawBenchmark {
 
   private static void doSingleQuery(SqlConnection conn, int remaining, CompletableFuture<Void> latch) {
     if (remaining > 0) {
-      conn.preparedQuery("SELECT id, randomnumber from world where id=?", args, ar -> {
+      conn.preparedQuery("SELECT id, randomnumber from world where id=?").execute(args, ar -> {
         if (ar.succeeded()) {
           doSingleQuery(conn, remaining -1, latch);
         } else {
@@ -131,7 +132,7 @@ public class RawBenchmark {
 
   private static void doLargeQuery(SqlConnection conn, int remaining, CompletableFuture<Void> latch) {
     if (remaining > 0) {
-      conn.preparedQuery("SELECT id, randomnumber from world", ar -> {
+      conn.preparedQuery("SELECT id, randomnumber from world").execute(ar -> {
         if (ar.succeeded()) {
           doLargeQuery(conn, remaining -1, latch);
           RowSet<Row> result = ar.result();
