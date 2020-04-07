@@ -34,6 +34,7 @@ import io.vertx.sqlclient.impl.command.SimpleQueryCommand;
 import io.vertx.sqlclient.impl.command.TxCommand;
 
 import java.nio.charset.Charset;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -42,6 +43,11 @@ import java.util.Map;
 public class MySQLSocketConnection extends SocketConnectionBase {
 
   private MySQLCodec codec;
+
+  private Map<String, MySQLParamDesc> paramMetadataCache = null;
+  private Map<String, MySQLRowDesc> binaryResultsetMetadataCache = null;
+  private Map<String, MySQLRowDesc> textResultsetMetadataCache = null;
+  private boolean isResultsetMetadataCacheEnabled = false;
 
   public MySQLSocketConnection(NetSocketInternal socket,
                                boolean cachePreparedStatements,
@@ -87,5 +93,35 @@ public class MySQLSocketConnection extends SocketConnectionBase {
     } else {
       super.doSchedule(cmd, handler);
     }
+  }
+
+  public Map<String, MySQLParamDesc> paramMetadataCache() {
+    return paramMetadataCache;
+  }
+
+  public Map<String, MySQLRowDesc> binaryResultsetMetadataCache() {
+    return binaryResultsetMetadataCache;
+  }
+
+  public Map<String, MySQLRowDesc> textResultsetMetadataCache() {
+    return textResultsetMetadataCache;
+  }
+
+  public void initialResultsetMetadataCache() {
+    paramMetadataCache = new HashMap<>();
+    binaryResultsetMetadataCache = new HashMap<>();
+    textResultsetMetadataCache = new HashMap<>();
+    this.isResultsetMetadataCacheEnabled = true;
+  }
+
+  public void clearResultsetMetadataCache() {
+    if (isResultsetMetadataCacheEnabled) {
+      binaryResultsetMetadataCache.clear();
+      textResultsetMetadataCache.clear();
+    }
+  }
+
+  public boolean isResultsetMetadataCacheEnabled() {
+    return isResultsetMetadataCacheEnabled;
   }
 }

@@ -52,6 +52,7 @@ public class MySQLConnectOptions extends SqlConnectOptions {
   public static final Map<String, String> DEFAULT_CONNECTION_ATTRIBUTES;
   public static final SslMode DEFAULT_SSL_MODE = SslMode.DISABLED;
   public static final String DEFAULT_CHARACTER_ENCODING = "UTF-8";
+  public static final boolean DEFAULT_CACHE_RESULTSET_METADATA = false;
 
   static {
     Map<String, String> defaultAttributes = new HashMap<>();
@@ -66,6 +67,7 @@ public class MySQLConnectOptions extends SqlConnectOptions {
   private String serverRsaPublicKeyPath;
   private Buffer serverRsaPublicKeyValue;
   private String characterEncoding;
+  private boolean cacheResultsetMetadata; //optional
 
   public MySQLConnectOptions() {
     super();
@@ -73,6 +75,7 @@ public class MySQLConnectOptions extends SqlConnectOptions {
     this.sslMode = DEFAULT_SSL_MODE;
     this.useAffectedRows = DEFAULT_USE_AFFECTED_ROWS;
     this.characterEncoding = DEFAULT_CHARACTER_ENCODING;
+    this.cacheResultsetMetadata = DEFAULT_CACHE_RESULTSET_METADATA;
   }
 
   public MySQLConnectOptions(JsonObject json) {
@@ -81,6 +84,7 @@ public class MySQLConnectOptions extends SqlConnectOptions {
     this.sslMode = DEFAULT_SSL_MODE;
     this.useAffectedRows = DEFAULT_USE_AFFECTED_ROWS;
     this.characterEncoding = DEFAULT_CHARACTER_ENCODING;
+    this.cacheResultsetMetadata = DEFAULT_CACHE_RESULTSET_METADATA;
     MySQLConnectOptionsConverter.fromJson(json, this);
   }
 
@@ -93,6 +97,7 @@ public class MySQLConnectOptions extends SqlConnectOptions {
     this.serverRsaPublicKeyPath = other.serverRsaPublicKeyPath;
     this.serverRsaPublicKeyValue = other.serverRsaPublicKeyValue != null ? other.serverRsaPublicKeyValue.copy() : null;
     this.characterEncoding = other.characterEncoding;
+    this.cacheResultsetMetadata = DEFAULT_CACHE_RESULTSET_METADATA;
   }
 
   /**
@@ -256,6 +261,15 @@ public class MySQLConnectOptions extends SqlConnectOptions {
    */
   public Buffer getServerRsaPublicKeyValue() {
     return serverRsaPublicKeyValue;
+  }
+
+  public MySQLConnectOptions setCacheResultsetMetadata(boolean cacheResultsetMetadata) {
+    this.cacheResultsetMetadata = cacheResultsetMetadata;
+    return this;
+  }
+
+  public boolean isCacheResultsetMetadata() {
+    return cacheResultsetMetadata;
   }
 
   @Override

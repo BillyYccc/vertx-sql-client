@@ -162,8 +162,8 @@ public class MySQLRule extends ExternalResource {
     } else {
       // use default version for testing servers
       if (databaseType == DatabaseType.MySQL) {
-        // 5.7 by default for MySQL
-        this.databaseServerInfo = DatabaseServerInfo.MySQL_V5_7;
+        // 8.0 by default for MySQL
+        this.databaseServerInfo = DatabaseServerInfo.MySQL_V8_0;
       } else if (databaseType == DatabaseType.MariaDB) {
         // 10.4 by default for MariaDB
         this.databaseServerInfo = DatabaseServerInfo.MariaDB_V10_4;

@@ -68,9 +68,12 @@ class MySQLDecoder extends ByteToMessageDecoder {
   }
 
   private void decodePayload(ByteBuf payload, int payloadLength, int sequenceId) {
-    CommandCodec ctx = inflight.peek();
-    ctx.sequenceId = sequenceId + 1;
-    ctx.decodePayload(payload, payloadLength);
-    payload.clear();
+    CommandCodec<?, ?> ctx = inflight.peek();
+    if (ctx != null) {
+      ctx.sequenceId = sequenceId + 1;
+      ctx.decodePayload(payload, payloadLength);
+      payload.clear();
+    }
+    // when the command is completed but there're some more incoming packets, in such situation the connection is corrupt and should be closed.
   }
 }

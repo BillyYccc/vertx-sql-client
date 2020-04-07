@@ -27,6 +27,17 @@ public class MySQLParamDesc extends ParamDesc {
     this.sendTypesToServer = false;
   }
 
+  public MySQLParamDesc(MySQLParamDesc mySQLParamDesc) {
+    ColumnDefinition[] origin = mySQLParamDesc.paramDefinitions();
+    this.paramDefinitions = new ColumnDefinition[origin.length];
+    for (int i = 0; i < paramDefinitions.length; i++) {
+      ColumnDefinition copy = origin[i];
+      paramDefinitions[i] = new ColumnDefinition(copy.catalog(), copy.schema(), copy.table(), copy.orgTable(), copy.name(), copy.orgName(),
+        copy.characterSet(), copy.columnLength(), DataType.DEFAULT, copy.flags(), copy.decimals());
+    }
+    this.sendTypesToServer = false;
+  }
+
   public ColumnDefinition[] paramDefinitions() {
     return paramDefinitions;
   }

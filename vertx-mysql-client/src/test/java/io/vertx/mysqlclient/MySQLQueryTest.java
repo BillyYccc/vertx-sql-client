@@ -18,11 +18,9 @@ import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowIterator;
+import io.vertx.sqlclient.RowSet;
 import io.vertx.sqlclient.Tuple;
-import org.junit.After;
-import org.junit.Assume;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.runner.RunWith;
 
 import java.time.LocalDate;
@@ -212,6 +210,136 @@ public class MySQLQueryTest extends MySQLTestBase {
                 conn.close();
               }));
             }));
+          }));
+        }));
+      }));
+    }));
+  }
+
+  @Test
+  public void testQueryCacheResultsetMetadata(TestContext ctx) {
+    Assume.assumeTrue(rule.isUsingMySQL8()); // CLIENT_OPTIONAL_RESULTSET_METADATA flag is introduced in MySQL 8.0.3
+    options.setCacheResultsetMetadata(true);
+    MySQLConnection.connect(vertx, options, ctx.asyncAssertSuccess(conn -> {
+      conn.query("SELECT id, message FROM immutable").execute(ctx.asyncAssertSuccess(res1 -> {
+        ctx.assertEquals(12, res1.size());
+        Row row = res1.iterator().next();
+        ctx.assertEquals(1, row.getInteger(0));
+        ctx.assertEquals("fortune: No such file or directory", row.getString(1));
+        conn.query("SET SESSION resultset_metadata = 'NONE'").execute(ctx.asyncAssertSuccess(res0 -> {
+          conn.query("SELECT id, message FROM immutable").execute(ctx.asyncAssertSuccess(res2 -> {
+            ctx.assertEquals(12, res2.size());
+            Row row2 = res2.iterator().next();
+            ctx.assertEquals(1, row2.getInteger(0));
+            ctx.assertEquals("fortune: No such file or directory", row2.getString(1));
+            conn.close();
+          }));
+        }));
+      }));
+    }));
+  }
+
+  @Test
+  public void testPreparedQueryCacheResultsetMetadata(TestContext ctx) {
+    Assume.assumeTrue(rule.isUsingMySQL8()); // CLIENT_OPTIONAL_RESULTSET_METADATA flag is introduced in MySQL 8.0.3
+    options.setCacheResultsetMetadata(true);
+    MySQLConnection.connect(vertx, options, ctx.asyncAssertSuccess(conn -> {
+      conn.preparedQuery("SELECT id, message FROM immutable").execute(ctx.asyncAssertSuccess(res1 -> {
+        ctx.assertEquals(12, res1.size());
+        Row row = res1.iterator().next();
+        ctx.assertEquals(1, row.getInteger(0));
+        ctx.assertEquals("fortune: No such file or directory", row.getString(1));
+        conn.query("SET SESSION resultset_metadata = 'NONE'").execute(ctx.asyncAssertSuccess(res0 -> {
+          conn.preparedQuery("SELECT id, message FROM immutable").execute(ctx.asyncAssertSuccess(res2 -> {
+            ctx.assertEquals(12, res2.size());
+            Row row2 = res2.iterator().next();
+            ctx.assertEquals(1, row2.getInteger(0));
+            ctx.assertEquals("fortune: No such file or directory", row2.getString(1));
+            conn.close();
+          }));
+        }));
+      }));
+    }));
+  }
+
+  @Test
+  public void testPreparedQueryWithParamsCacheResultsetMetadata(TestContext ctx) {
+    Assume.assumeTrue(rule.isUsingMySQL8()); // CLIENT_OPTIONAL_RESULTSET_METADATA flag is introduced in MySQL 8.0.3
+    options.setCacheResultsetMetadata(true);
+    MySQLConnection.connect(vertx, options, ctx.asyncAssertSuccess(conn -> {
+      conn.preparedQuery("SELECT id, message FROM immutable WHERE id = ?").execute(Tuple.of(5), ctx.asyncAssertSuccess(res1 -> {
+        ctx.assertEquals(1, res1.size());
+        Row row = res1.iterator().next();
+        ctx.assertEquals(5, row.getInteger(0));
+        ctx.assertEquals("A computer program does what you tell it to do, not what you want it to do.", row.getString(1));
+        conn.query("SET SESSION resultset_metadata = 'NONE'").execute(ctx.asyncAssertSuccess(res0 -> {
+          conn.preparedQuery("SELECT id, message FROM immutable WHERE id = ?").execute(Tuple.of(5), ctx.asyncAssertSuccess(res2 -> {
+            ctx.assertEquals(1, res2.size());
+            Row row2 = res2.iterator().next();
+            ctx.assertEquals(5, row2.getInteger(0));
+            ctx.assertEquals("A computer program does what you tell it to do, not what you want it to do.", row2.getString(1));
+            conn.close();
+          }));
+        }));
+      }));
+    }));
+  }
+
+  @Test
+  public void testQueryEmptyCacheResultsetMetadataFailure(TestContext ctx) {
+    Assume.assumeTrue(rule.isUsingMySQL8()); // CLIENT_OPTIONAL_RESULTSET_METADATA flag is introduced in MySQL 8.0.3
+    options.setCacheResultsetMetadata(true);
+    MySQLConnection.connect(vertx, options, ctx.asyncAssertSuccess(conn -> {
+      conn.query("SET SESSION resultset_metadata = 'NONE'").execute(ctx.asyncAssertSuccess(res0 -> {
+        conn.query("SELECT id, message FROM immutable").execute(ctx.asyncAssertFailure(error -> {
+          ctx.assertEquals("Fatal error: execute a query[SELECT id, message FROM immutable] with resultset metadata cache option on but the client could not find the entry, make sure you have cached the resultset metadata before setting the variable resultset_metadata to NONE. The connection will be closed.", error.getMessage());
+          conn.close();
+        }));
+      }));
+    }));
+  }
+
+  @Test
+  public void testPreparedQueryPrepareEmptyResultsetMetadataFailure(TestContext ctx) {
+    Assume.assumeTrue(rule.isUsingMySQL8()); // CLIENT_OPTIONAL_RESULTSET_METADATA flag is introduced in MySQL 8.0.3
+    options.setCacheResultsetMetadata(true);
+    MySQLConnection.connect(vertx, options, ctx.asyncAssertSuccess(conn -> {
+      conn.query("SET SESSION resultset_metadata = 'NONE'").execute(ctx.asyncAssertSuccess(res0 -> {
+        conn.prepare("SELECT id, message FROM immutable WHERE id = ?", ctx.asyncAssertFailure(error -> {
+          ctx.assertEquals("Fatal error: prepare a prepareQuery[SELECT id, message FROM immutable WHERE id = ?] with resultset metadata cache option on but the client could not find the entry, make sure you have cached the resultset metadata before setting the variable resultset_metadata to NONE. The connection will be closed.", error.getMessage());
+          conn.close();
+        }));
+      }));
+    }));
+  }
+
+  @Test
+  public void testMultiQueryCacheResultsetMetadata(TestContext ctx) {
+    Assume.assumeTrue(rule.isUsingMySQL8()); // CLIENT_OPTIONAL_RESULTSET_METADATA flag is introduced in MySQL 8.0.3
+    options.setCacheResultsetMetadata(true);
+    MySQLConnection.connect(vertx, options, ctx.asyncAssertSuccess(conn -> {
+      conn.query("SELECT id, message FROM immutable WHERE id = 1;SELECT id, message FROM immutable WHERE id = 2;").execute(ctx.asyncAssertSuccess(res1 -> {
+        ctx.assertEquals(1, res1.size());
+        Row res1Row = res1.iterator().next();
+        ctx.assertEquals(1, res1Row.getInteger(0));
+        ctx.assertEquals("fortune: No such file or directory", res1Row.getString(1));
+        RowSet<Row> res2Row = res1.next();
+        ctx.assertEquals(1, res1.size());
+        Row secondRow = res2Row.iterator().next();
+        ctx.assertEquals(2, secondRow.getInteger(0));
+        ctx.assertEquals("A computer scientist is someone who fixes things that aren't broken.", secondRow.getString(1));
+        conn.query("SET SESSION resultset_metadata = 'NONE'").execute(ctx.asyncAssertSuccess(res0 -> {
+          conn.query("SELECT id, message FROM immutable WHERE id = 1;SELECT id, message FROM immutable WHERE id = 2;").execute(ctx.asyncAssertSuccess(res3 -> {
+            ctx.assertEquals(1, res3.size());
+            Row res3Row = res3.iterator().next();
+            ctx.assertEquals(1, res3Row.getInteger(0));
+            ctx.assertEquals("fortune: No such file or directory", res3Row.getString(1));
+            RowSet<Row> res4 = res3.next();
+            ctx.assertEquals(1, res4.size());
+            Row res4Row = res4.iterator().next();
+            ctx.assertEquals(2, res4Row.getInteger(0));
+            ctx.assertEquals("A computer scientist is someone who fixes things that aren't broken.", res4Row.getString(1));
+            conn.close();
           }));
         }));
       }));

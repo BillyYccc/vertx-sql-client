@@ -47,6 +47,7 @@ public class MySQLConnectionFactory implements ConnectionFactory {
   private final boolean cachePreparedStatements;
   private final int preparedStatementCacheSize;
   private final int preparedStatementCacheSqlLimit;
+  private final boolean cacheResultsetMetadata;
   private final int initialCapabilitiesFlags;
 
   public MySQLConnectionFactory(Vertx vertx, ContextInternal context, MySQLConnectOptions options) {
@@ -89,6 +90,7 @@ public class MySQLConnectionFactory implements ConnectionFactory {
       }
     }
     this.serverRsaPublicKey = serverRsaPublicKey;
+    this.cacheResultsetMetadata = options.isCacheResultsetMetadata();
     this.initialCapabilitiesFlags = initCapabilitiesFlags();
 
     // check the SSLMode here
@@ -154,6 +156,10 @@ public class MySQLConnectionFactory implements ConnectionFactory {
     }
     if (!useAffectedRows) {
       capabilitiesFlags |= CLIENT_FOUND_ROWS;
+    }
+
+    if (cacheResultsetMetadata) {
+      capabilitiesFlags |= CLIENT_OPTIONAL_RESULTSET_METADATA;
     }
 
     return capabilitiesFlags;

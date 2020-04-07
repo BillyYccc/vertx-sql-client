@@ -20,11 +20,16 @@ import io.netty.buffer.ByteBuf;
 import io.vertx.mysqlclient.impl.MySQLParamDesc;
 import io.vertx.mysqlclient.impl.MySQLRowDesc;
 import io.vertx.mysqlclient.impl.datatype.DataFormat;
+import io.vertx.mysqlclient.impl.datatype.DataType;
+import io.vertx.mysqlclient.impl.protocol.CapabilitiesFlag;
 import io.vertx.mysqlclient.impl.protocol.ColumnDefinition;
 import io.vertx.mysqlclient.impl.protocol.CommandType;
+import io.vertx.mysqlclient.impl.util.BufferUtils;
 import io.vertx.sqlclient.impl.PreparedStatement;
 import io.vertx.sqlclient.impl.command.CommandResponse;
 import io.vertx.sqlclient.impl.command.PrepareStatementCommand;
+
+import java.nio.charset.StandardCharsets;
 
 import static io.vertx.mysqlclient.impl.protocol.Packets.ERROR_PACKET_HEADER;
 
@@ -66,20 +71,44 @@ class PrepareStatementCodec extends CommandCodec<PreparedStatement, PrepareState
           this.paramDescs = new ColumnDefinition[numberOfParameters];
           this.columnDescs = new ColumnDefinition[numberOfColumns];
 
-          if (numberOfParameters != 0) {
-            processingIndex = 0;
-            this.commandHandlerState = CommandHandlerState.HANDLING_PARAM_COLUMN_DEFINITION;
-          } else if (numberOfColumns != 0) {
-            processingIndex = 0;
-            this.commandHandlerState = CommandHandlerState.HANDLING_COLUMN_COLUMN_DEFINITION;
-          } else {
-            handleReadyForQuery();
-            resetIntermediaryResult();
+          if (encoder.socketConnection.isResultsetMetadataCacheEnabled()) {
+            boolean metadataFollows = payload.readByte() == 1;
+            if (!metadataFollows) {
+              MySQLParamDesc cachedParamDesc = encoder.socketConnection.paramMetadataCache().get(cmd.sql());
+              MySQLRowDesc cachedRowDesc = encoder.socketConnection.binaryResultsetMetadataCache().get(cmd.sql());
+              if (cachedParamDesc != null && cachedRowDesc != null) {
+                handleReadyForQuery(new MySQLParamDesc(cachedParamDesc), cachedRowDesc);
+                resetIntermediaryResult();
+                break;
+              } else {
+                completionHandler.handle(CommandResponse.failure(new IllegalStateException(String.format("Fatal error: prepare a prepareQuery[%s] with resultset metadata cache option on but the client could not find the entry, make sure you have cached the resultset metadata before setting the variable resultset_metadata to NONE. The connection will be closed.", cmd.sql()))));
+                encoder.chctx.close(); // the connection is corrupt and should be closed directly
+                return;
+              }
+            }
           }
+            if (numberOfParameters != 0) {
+              processingIndex = 0;
+              this.commandHandlerState = CommandHandlerState.HANDLING_PARAM_COLUMN_DEFINITION;
+            } else if (numberOfColumns != 0) {
+              processingIndex = 0;
+              this.commandHandlerState = CommandHandlerState.HANDLING_COLUMN_COLUMN_DEFINITION;
+            } else {
+              MySQLParamDesc paramDesc = new MySQLParamDesc(paramDescs);
+              MySQLRowDesc rowDesc = new MySQLRowDesc(columnDescs, DataFormat.BINARY);
+              if (encoder.socketConnection.isResultsetMetadataCacheEnabled()) {
+                encoder.socketConnection.paramMetadataCache().put(cmd.sql(), paramDesc);
+                encoder.socketConnection.binaryResultsetMetadataCache().put(cmd.sql(), rowDesc);
+              }
+
+              handleReadyForQuery(paramDesc, rowDesc);
+              resetIntermediaryResult();
+            }
+
         }
         break;
       case HANDLING_PARAM_COLUMN_DEFINITION:
-        paramDescs[processingIndex++] = decodeColumnDefinitionPacketPayload(payload);
+        paramDescs[processingIndex++] = decodeParamColumnDefinitionPacketPayload(payload);
         if (processingIndex == paramDescs.length) {
           if (isDeprecatingEofFlagEnabled()) {
             // we enabled the DEPRECATED_EOF flag and don't need to accept an EOF_Packet
@@ -130,12 +159,12 @@ class PrepareStatementCodec extends CommandCodec<PreparedStatement, PrepareState
     sendPacket(packet, payloadLength);
   }
 
-  private void handleReadyForQuery() {
+  private void handleReadyForQuery(MySQLParamDesc paramDesc, MySQLRowDesc rowDesc) {
     completionHandler.handle(CommandResponse.success(new MySQLPreparedStatement(
       cmd.sql(),
       this.statementId,
-      new MySQLParamDesc(paramDescs),
-      new MySQLRowDesc(columnDescs, DataFormat.BINARY))));
+      paramDesc,
+      rowDesc)));
   }
 
   private void resetIntermediaryResult() {
@@ -148,7 +177,14 @@ class PrepareStatementCodec extends CommandCodec<PreparedStatement, PrepareState
 
   private void handleParamDefinitionsDecodingCompleted() {
     if (columnDescs.length == 0) {
-      handleReadyForQuery();
+      MySQLParamDesc paramDesc = new MySQLParamDesc(paramDescs);
+      MySQLRowDesc rowDesc = new MySQLRowDesc(columnDescs, DataFormat.BINARY);
+      if (encoder.socketConnection.isResultsetMetadataCacheEnabled()) {
+        encoder.socketConnection.paramMetadataCache().put(cmd.sql(), paramDesc);
+        encoder.socketConnection.binaryResultsetMetadataCache().put(cmd.sql(), rowDesc);
+      }
+
+      handleReadyForQuery(paramDesc, rowDesc);
       resetIntermediaryResult();
     } else {
       processingIndex = 0;
@@ -157,7 +193,14 @@ class PrepareStatementCodec extends CommandCodec<PreparedStatement, PrepareState
   }
 
   private void handleColumnDefinitionsDecodingCompleted() {
-    handleReadyForQuery();
+    MySQLParamDesc paramDesc = new MySQLParamDesc(paramDescs);
+    MySQLRowDesc rowDesc = new MySQLRowDesc(columnDescs, DataFormat.BINARY);
+    if (encoder.socketConnection.isResultsetMetadataCacheEnabled()) {
+      encoder.socketConnection.paramMetadataCache().put(cmd.sql(), paramDesc);
+      encoder.socketConnection.binaryResultsetMetadataCache().put(cmd.sql(), rowDesc);
+    }
+
+    handleReadyForQuery(paramDesc, rowDesc);
     resetIntermediaryResult();
   }
 
@@ -167,5 +210,22 @@ class PrepareStatementCodec extends CommandCodec<PreparedStatement, PrepareState
     PARAM_DEFINITIONS_DECODING_COMPLETED,
     HANDLING_COLUMN_COLUMN_DEFINITION,
     COLUMN_DEFINITIONS_DECODING_COMPLETED
+  }
+
+  private ColumnDefinition decodeParamColumnDefinitionPacketPayload(ByteBuf payload) {
+    String catalog = BufferUtils.readLengthEncodedString(payload, StandardCharsets.UTF_8);
+    String schema = BufferUtils.readLengthEncodedString(payload, StandardCharsets.UTF_8);
+    String table = BufferUtils.readLengthEncodedString(payload, StandardCharsets.UTF_8);
+    String orgTable = BufferUtils.readLengthEncodedString(payload, StandardCharsets.UTF_8);
+    String name = BufferUtils.readLengthEncodedString(payload, StandardCharsets.UTF_8);
+    String orgName = BufferUtils.readLengthEncodedString(payload, StandardCharsets.UTF_8);
+    long lengthOfFixedLengthFields = BufferUtils.readLengthEncodedInteger(payload);
+    int characterSet = payload.readUnsignedShortLE();
+    long columnLength = payload.readUnsignedIntLE();
+    payload.skipBytes(1); // the type is useless, we will always bind new parameters for the first time
+    DataType type = DataType.DEFAULT;
+    int flags = payload.readUnsignedShortLE();
+    byte decimals = payload.readByte();
+    return new ColumnDefinition(catalog, schema, table, orgTable, name, orgName, characterSet, columnLength, type, flags, decimals);
   }
 }

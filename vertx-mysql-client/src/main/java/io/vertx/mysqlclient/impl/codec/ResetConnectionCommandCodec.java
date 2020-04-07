@@ -25,6 +25,7 @@ class ResetConnectionCommandCodec extends CommandCodec<Void, ResetConnectionComm
   @Override
   void encode(MySQLEncoder encoder) {
     super.encode(encoder);
+    encoder.socketConnection.clearResultsetMetadataCache();
     sendResetConnectionCommand();
   }
 

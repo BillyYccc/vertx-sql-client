@@ -29,6 +29,7 @@ import io.vertx.sqlclient.impl.command.CommandResponse;
 
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.Map;
 
 import static io.vertx.mysqlclient.impl.protocol.CapabilitiesFlag.*;
@@ -170,6 +171,9 @@ class InitialHandshakeCommandCodec extends AuthenticationCommandBaseCodec<Connec
     encoder.charset = Charset.forName(collation.mappedJavaCharsetName());
     Map<String, String> clientConnectionAttributes = cmd.connectionAttributes();
     encoder.clientCapabilitiesFlag &= serverCapabilitiesFlags;
+    if (((encoder.clientCapabilitiesFlag & CLIENT_OPTIONAL_RESULTSET_METADATA) != 0)) {
+      encoder.socketConnection.initialResultsetMetadataCache();
+    }
     sendHandshakeResponseMessage(cmd.username(), cmd.password(), cmd.database(), nonce, authMethodName, clientConnectionAttributes);
   }
 
