@@ -31,10 +31,10 @@ import java.util.concurrent.TimeUnit;
     "-XX:+UseBiasedLocking",
     "-XX:BiasedLockingStartupDelay=0",
     "-XX:+AggressiveOpts",
-    "-XX:+UnlockDiagnosticVMOptions",
-    "-XX:+TraceClassLoading",
-    "-XX:+LogCompilation",
-    "-XX:+PrintInlining"
+    "-XX:+UnlockDiagnosticVMOptions"
+//    "-XX:+TraceClassLoading",
+//    "-XX:+LogCompilation",
+//    "-XX:+PrintInlining"
 })
 @OutputTimeUnit(TimeUnit.SECONDS)
 public abstract class BenchmarkBase {

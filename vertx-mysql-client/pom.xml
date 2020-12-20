@@ -92,11 +92,15 @@
       <artifactId>mysql-connector-java</artifactId>
       <version>8.0.16</version>
     </dependency>
+<!--    <dependency>-->
+<!--      <groupId>com.chrisnewland</groupId>-->
+<!--      <artifactId>jitwatch</artifactId>-->
+<!--      <version>1.0.0</version>-->
+<!--      <scope>test</scope>-->
+<!--    </dependency>-->
     <dependency>
-      <groupId>com.chrisnewland</groupId>
-      <artifactId>jitwatch</artifactId>
-      <version>1.0.0</version>
-      <scope>test</scope>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-web</artifactId>
     </dependency>
 
 
