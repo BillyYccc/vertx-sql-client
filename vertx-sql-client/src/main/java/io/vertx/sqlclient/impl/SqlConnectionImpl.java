@@ -150,4 +150,9 @@ public class SqlConnectionImpl<C extends SqlConnection> extends SqlConnectionBas
       }
     });
   }
+
+  public <T extends SqlConnectionImpl<T>> Future<SqlConnectionImpl<C>> initiateClientState() {
+    // NO-OP
+    return Future.succeededFuture(this);
+  }
 }

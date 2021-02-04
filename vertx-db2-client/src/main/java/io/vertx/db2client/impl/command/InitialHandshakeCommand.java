@@ -20,8 +20,8 @@ import java.util.Map;
 import io.vertx.sqlclient.impl.Connection;
 import io.vertx.sqlclient.impl.SocketConnectionBase;
 
-public class InitialHandshakeCommand extends AuthenticationCommandBase<Connection> {
-  
+public class InitialHandshakeCommand extends AuthenticationCommandBase<SocketConnectionBase> {
+
   private final SocketConnectionBase conn;
 
   public InitialHandshakeCommand(SocketConnectionBase conn, String username, String password, String database,

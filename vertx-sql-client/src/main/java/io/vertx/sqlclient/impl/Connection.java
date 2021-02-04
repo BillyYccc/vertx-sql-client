@@ -18,6 +18,7 @@
 package io.vertx.sqlclient.impl;
 
 import io.vertx.core.Promise;
+import io.vertx.sqlclient.SqlConnection;
 import io.vertx.sqlclient.impl.command.CommandScheduler;
 import io.vertx.sqlclient.spi.DatabaseMetadata;
 

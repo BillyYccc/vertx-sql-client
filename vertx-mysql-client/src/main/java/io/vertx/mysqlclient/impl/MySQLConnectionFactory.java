@@ -22,9 +22,7 @@ import io.vertx.mysqlclient.MySQLAuthenticationPlugin;
 import io.vertx.mysqlclient.MySQLConnectOptions;
 import io.vertx.mysqlclient.SslMode;
 import io.vertx.sqlclient.SqlConnectOptions;
-import io.vertx.sqlclient.impl.Connection;
-import io.vertx.sqlclient.impl.ConnectionFactory;
-import io.vertx.sqlclient.impl.SqlConnectionFactoryBase;
+import io.vertx.sqlclient.impl.*;
 
 import java.nio.charset.Charset;
 
@@ -110,7 +108,7 @@ public class MySQLConnectionFactory extends SqlConnectionFactoryBase implements 
   }
 
   @Override
-  protected void doConnectInternal(Promise<Connection> promise) {
+  protected void doConnectInternal(Promise<SocketConnectionBase> promise) {
     Future<NetSocket> fut = netClient.connect(socketAddress);
     fut.onComplete(ar -> {
       if (ar.succeeded()) {
@@ -122,6 +120,13 @@ public class MySQLConnectionFactory extends SqlConnectionFactoryBase implements 
         promise.fail(ar.cause());
       }
     });
+  }
+
+  @Override
+  protected Future<Connection> initializeConnectionState(SocketConnectionBase socketConnectionBase) {
+    MySQLConnectionImpl wrappedConnection = new MySQLConnectionImpl(this, context, socketConnectionBase, null, null);
+    socketConnectionBase.init(wrappedConnection);
+    return wrappedConnection.initiateClientState().map(socketConnectionBase);
   }
 
   private int initCapabilitiesFlags() {

@@ -83,10 +83,13 @@ public abstract class SqlConnectionFactoryBase implements ConnectionFactory {
   }
 
   private void doConnectWithRetry(Promise<Connection> promise, int remainingAttempts) {
-    Promise<Connection> promise0 = context.promise();
+    Promise<SocketConnectionBase> promise0 = context.promise();
     promise0.future().onComplete(ar -> {
       if (ar.succeeded()) {
-        promise.complete(ar.result());
+        SocketConnectionBase socketConnectionBase = ar.result();
+        initializeConnectionState(socketConnectionBase)
+          .onSuccess(conn -> promise.complete(socketConnectionBase))
+          .onFailure(promise::fail);
       } else {
         if (remainingAttempts >= 0) {
           context.owner().setTimer(reconnectInterval, id -> {
@@ -119,6 +122,9 @@ public abstract class SqlConnectionFactoryBase implements ConnectionFactory {
    *
    * @param promise the result handler
    */
-  protected abstract void doConnectInternal(Promise<Connection> promise);
+  protected abstract void doConnectInternal(Promise<SocketConnectionBase> promise);
 
+  protected Future<Connection> initializeConnectionState(SocketConnectionBase socketConnectionBase) {
+    return Future.succeededFuture(socketConnectionBase);
+  }
 }

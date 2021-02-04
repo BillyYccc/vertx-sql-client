@@ -27,7 +27,6 @@ import io.vertx.mysqlclient.MySQLAuthenticationPlugin;
 import io.vertx.mysqlclient.SslMode;
 import io.vertx.mysqlclient.impl.codec.MySQLCodec;
 import io.vertx.mysqlclient.impl.command.InitialHandshakeCommand;
-import io.vertx.sqlclient.impl.Connection;
 import io.vertx.sqlclient.impl.QueryResultHandler;
 import io.vertx.sqlclient.impl.SocketConnectionBase;
 import io.vertx.sqlclient.impl.command.CommandBase;
@@ -48,6 +47,8 @@ public class MySQLSocketConnection extends SocketConnectionBase {
   public MySQLDatabaseMetadata metaData;
   private MySQLCodec codec;
 
+  public boolean isOptionalMetadataSupported = false;
+
   public MySQLSocketConnection(NetSocketInternal socket,
                                boolean cachePreparedStatements,
                                int preparedStatementCacheSize,
@@ -67,7 +68,7 @@ public class MySQLSocketConnection extends SocketConnectionBase {
                           int initialCapabilitiesFlags,
                           Charset charsetEncoding,
                           MySQLAuthenticationPlugin authenticationPlugin,
-                          Promise<Connection> completionHandler) {
+                          Promise<SocketConnectionBase> completionHandler) {
     InitialHandshakeCommand cmd = new InitialHandshakeCommand(this, username, password, database, collation, serverRsaPublicKey, properties, sslMode, initialCapabilitiesFlags, charsetEncoding, authenticationPlugin);
     schedule(cmd, completionHandler);
   }

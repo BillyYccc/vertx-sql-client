@@ -57,7 +57,7 @@ public class DB2SocketConnection extends SocketConnectionBase {
       String password,
       String database,
       Map<String, String> properties,
-      Promise<Connection> completionHandler) {
+      Promise<SocketConnectionBase> completionHandler) {
     InitialHandshakeCommand cmd = new InitialHandshakeCommand(this, username, password, database, properties);
     schedule(cmd, completionHandler);
   }

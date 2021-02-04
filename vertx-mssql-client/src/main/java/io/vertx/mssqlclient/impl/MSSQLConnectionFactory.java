@@ -21,6 +21,7 @@ import io.vertx.core.net.NetSocket;
 import io.vertx.sqlclient.SqlConnectOptions;
 import io.vertx.sqlclient.impl.Connection;
 import io.vertx.sqlclient.impl.ConnectionFactory;
+import io.vertx.sqlclient.impl.SocketConnectionBase;
 import io.vertx.sqlclient.impl.SqlConnectionFactoryBase;
 
 class MSSQLConnectionFactory extends SqlConnectionFactoryBase implements ConnectionFactory {
@@ -40,7 +41,7 @@ class MSSQLConnectionFactory extends SqlConnectionFactoryBase implements Connect
   }
 
   @Override
-  protected void doConnectInternal(Promise<Connection> promise) {
+  protected void doConnectInternal(Promise<SocketConnectionBase> promise) {
     Future<NetSocket> fut = netClient.connect(socketAddress);
     fut.onComplete(ar -> {
       if (ar.succeeded()) {

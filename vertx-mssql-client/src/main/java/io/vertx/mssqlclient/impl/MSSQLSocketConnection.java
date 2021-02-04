@@ -52,9 +52,9 @@ class MSSQLSocketConnection extends SocketConnectionBase {
     schedule(cmd, promise);
   }
 
-  void sendLoginMessage(String username, String password, String database, Map<String, String> properties, Handler<AsyncResult<Connection>> completionHandler) {
+  void sendLoginMessage(String username, String password, String database, Map<String, String> properties, Handler<AsyncResult<SocketConnectionBase>> completionHandler) {
     InitCommand cmd = new InitCommand(this, username, password, database, properties);
-    Promise<Connection> promise = Promise.promise();
+    Promise<SocketConnectionBase> promise = Promise.promise();
     promise.future().onComplete(completionHandler);
     schedule(cmd, promise);
   }

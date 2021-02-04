@@ -24,10 +24,15 @@ import io.vertx.mysqlclient.MySQLConnectOptions;
 import io.vertx.mysqlclient.MySQLConnection;
 import io.vertx.mysqlclient.MySQLSetOption;
 import io.vertx.mysqlclient.impl.command.*;
+import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.RowSet;
 import io.vertx.sqlclient.impl.Connection;
 import io.vertx.sqlclient.impl.ConnectionFactory;
 import io.vertx.sqlclient.impl.SqlConnectionImpl;
 import io.vertx.sqlclient.impl.tracing.QueryTracer;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class MySQLConnectionImpl extends SqlConnectionImpl<MySQLConnectionImpl> implements MySQLConnection {
 
@@ -191,5 +196,33 @@ public class MySQLConnectionImpl extends SqlConnectionImpl<MySQLConnectionImpl> 
     Promise<Void> promise = promise();
     schedule(cmd, promise);
     return promise.future();
+  }
+
+  @Override
+  @SuppressWarnings("unchecked")
+  public Future<MySQLConnectionImpl> initiateClientState() {
+    return this.query("SHOW SESSION VARIABLES;")
+      .execute()
+      .transform(ar -> {
+        if (ar.succeeded()) {
+          RowSet<Row> result = ar.result();
+          Map<String, String> serverSupportedVariables = new HashMap<>();
+          for (Row row : result) {
+            serverSupportedVariables.put(row.getString(0), row.getString(1));
+          }
+          MySQLSocketConnection socketConnection = (MySQLSocketConnection) conn; // should never be pooled-conn
+          initState(serverSupportedVariables, socketConnection);
+          return Future.succeededFuture(this);
+        } else {
+          return Future.failedFuture(ar.cause());
+        }
+      });
+  }
+
+  private void initState(Map<String, String> sessionVariables, MySQLSocketConnection socketConnection) {
+    String resultsetMetadata = sessionVariables.get("resultset_metadata");
+    if (resultsetMetadata != null) {
+      socketConnection.isOptionalMetadataSupported = true;
+    }
   }
 }

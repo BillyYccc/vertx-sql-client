@@ -27,7 +27,7 @@ import io.vertx.mysqlclient.impl.protocol.CapabilitiesFlag;
 import io.vertx.mysqlclient.impl.util.BufferUtils;
 import io.vertx.mysqlclient.impl.util.CachingSha2Authenticator;
 import io.vertx.mysqlclient.impl.util.Native41Authenticator;
-import io.vertx.sqlclient.impl.Connection;
+import io.vertx.sqlclient.impl.SocketConnectionBase;
 import io.vertx.sqlclient.impl.command.CommandResponse;
 
 import java.nio.charset.StandardCharsets;
@@ -36,7 +36,7 @@ import java.util.Map;
 import static io.vertx.mysqlclient.impl.protocol.CapabilitiesFlag.*;
 import static io.vertx.mysqlclient.impl.protocol.Packets.*;
 
-class InitialHandshakeCommandCodec extends AuthenticationCommandBaseCodec<Connection, InitialHandshakeCommand> {
+class InitialHandshakeCommandCodec extends AuthenticationCommandBaseCodec<SocketConnectionBase, InitialHandshakeCommand> {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(InitialHandshakeCommandCodec.class);
 

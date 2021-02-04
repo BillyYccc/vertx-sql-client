@@ -15,13 +15,12 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.mysqlclient.MySQLAuthenticationPlugin;
 import io.vertx.mysqlclient.SslMode;
 import io.vertx.mysqlclient.impl.MySQLCollation;
-import io.vertx.sqlclient.impl.Connection;
 import io.vertx.sqlclient.impl.SocketConnectionBase;
 
 import java.nio.charset.Charset;
 import java.util.Map;
 
-public class InitialHandshakeCommand extends AuthenticationCommandBase<Connection> {
+public class InitialHandshakeCommand extends AuthenticationCommandBase<SocketConnectionBase> {
   private final SocketConnectionBase conn;
   private final SslMode sslMode;
   private final int initialCapabilitiesFlags;

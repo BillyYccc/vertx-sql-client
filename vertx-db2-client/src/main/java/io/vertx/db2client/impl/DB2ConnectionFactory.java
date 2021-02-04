@@ -24,8 +24,8 @@ import io.vertx.core.net.NetSocket;
 import io.vertx.core.net.impl.NetSocketInternal;
 import io.vertx.db2client.DB2ConnectOptions;
 import io.vertx.sqlclient.SqlConnectOptions;
-import io.vertx.sqlclient.impl.Connection;
 import io.vertx.sqlclient.impl.ConnectionFactory;
+import io.vertx.sqlclient.impl.SocketConnectionBase;
 import io.vertx.sqlclient.impl.SqlConnectionFactoryBase;
 
 public class DB2ConnectionFactory extends SqlConnectionFactoryBase implements ConnectionFactory {
@@ -48,7 +48,7 @@ public class DB2ConnectionFactory extends SqlConnectionFactoryBase implements Co
   }
 
   @Override
-  protected void doConnectInternal(Promise<Connection> promise) {
+  protected void doConnectInternal(Promise<SocketConnectionBase> promise) {
     Future<NetSocket> fut = netClient.connect(socketAddress);
     fut.onComplete(ar -> {
       if (ar.succeeded()) {

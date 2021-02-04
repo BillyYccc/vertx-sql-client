@@ -23,11 +23,11 @@ import io.netty.buffer.ByteBuf;
 import io.vertx.pgclient.impl.PgDatabaseMetadata;
 import io.vertx.pgclient.impl.PgSocketConnection;
 import io.vertx.pgclient.impl.util.ScramAuthentication;
-import io.vertx.sqlclient.impl.Connection;
+import io.vertx.sqlclient.impl.SocketConnectionBase;
 import io.vertx.sqlclient.impl.command.CommandResponse;
 import io.vertx.sqlclient.impl.command.InitCommand;
 
-class InitCommandCodec extends PgCommandCodec<Connection, InitCommand> {
+class InitCommandCodec extends PgCommandCodec<SocketConnectionBase, InitCommand> {
 
   private PgEncoder encoder;
   private String encoding;
@@ -97,7 +97,7 @@ class InitCommandCodec extends PgCommandCodec<Connection, InitCommand> {
 
   @Override
   public void handleErrorResponse(ErrorResponse errorResponse) {
-    CommandResponse<Connection> resp = CommandResponse.failure(errorResponse.toException());
+    CommandResponse<SocketConnectionBase> resp = CommandResponse.failure(errorResponse.toException());
     completionHandler.handle(resp);
   }
 
@@ -111,7 +111,7 @@ class InitCommandCodec extends PgCommandCodec<Connection, InitCommand> {
       cs = Charset.forName(encoding);
     } catch (Exception ignore) {
     }
-    CommandResponse<Connection> fut;
+    CommandResponse<SocketConnectionBase> fut;
     if(cs == null || !cs.equals(StandardCharsets.UTF_8)) {
       fut = CommandResponse.failure(encoding + " is not supported in the client only UTF8");
     } else {

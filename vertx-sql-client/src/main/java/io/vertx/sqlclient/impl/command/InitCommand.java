@@ -17,7 +17,6 @@
 
 package io.vertx.sqlclient.impl.command;
 
-import io.vertx.sqlclient.impl.Connection;
 import io.vertx.sqlclient.impl.SocketConnectionBase;
 
 import java.util.Map;
@@ -27,7 +26,7 @@ import java.util.Map;
  *
  * @author <a href="mailto:julien@julienviet.com">Julien Viet</a>
  */
-public class InitCommand extends CommandBase<Connection> {
+public class InitCommand extends CommandBase<SocketConnectionBase> {
 
   private final SocketConnectionBase conn;
   private final String username;

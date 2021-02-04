@@ -32,6 +32,7 @@ import io.vertx.pgclient.SslMode;
 import io.vertx.sqlclient.SqlConnectOptions;
 import io.vertx.sqlclient.impl.Connection;
 import io.vertx.sqlclient.impl.ConnectionFactory;
+import io.vertx.sqlclient.impl.SocketConnectionBase;
 import io.vertx.sqlclient.impl.SqlConnectionFactoryBase;
 
 /**
@@ -74,11 +75,11 @@ class PgConnectionFactory extends SqlConnectionFactoryBase implements Connection
   }
 
   @Override
-  protected void doConnectInternal(Promise<Connection> promise) {
+  protected void doConnectInternal(Promise<SocketConnectionBase> promise) {
     doConnect().flatMap(conn -> {
       PgSocketConnection socket = (PgSocketConnection) conn;
       socket.init();
-      return Future.<Connection>future(p -> socket.sendStartupMessage(username, password, database, properties, p))
+      return Future.<SocketConnectionBase>future(p -> socket.sendStartupMessage(username, password, database, properties, p))
         .map(conn);
     }).onComplete(promise);
   }
@@ -94,8 +95,8 @@ class PgConnectionFactory extends SqlConnectionFactoryBase implements Connection
     });
   }
 
-  private Future<Connection> doConnect() {
-    Future<Connection> connFuture;
+  private Future<SocketConnectionBase> doConnect() {
+    Future<SocketConnectionBase> connFuture;
     switch (sslMode) {
       case DISABLE:
         connFuture = doConnect(false);
@@ -117,7 +118,7 @@ class PgConnectionFactory extends SqlConnectionFactoryBase implements Connection
     return connFuture;
   }
 
-  private Future<Connection> doConnect(boolean ssl) {
+  private Future<SocketConnectionBase> doConnect(boolean ssl) {
     Future<NetSocket> soFut;
     try {
       soFut = netClient.connect(socketAddress, (String) null);
@@ -125,7 +126,7 @@ class PgConnectionFactory extends SqlConnectionFactoryBase implements Connection
       // Client is closed
       return context.failedFuture(e);
     }
-    Future<Connection> connFut = soFut.map(so -> newSocketConnection((NetSocketInternal) so));
+    Future<SocketConnectionBase> connFut = soFut.map(so -> newSocketConnection((NetSocketInternal) so));
     if (ssl && !socketAddress.isDomainSocket()) {
       // upgrade connection to SSL if needed
       connFut = connFut.flatMap(conn -> Future.future(p -> {
